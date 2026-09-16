@@ -29,17 +29,17 @@ const { showLegalLinks = true } = Astro.props;
       </p>
     </div>
 
-    {showLegalLinks && <SocialLinks size={18} className="footer__social" />}
+    {showLegalLinks && <SocialLinks size={32} className="footer__social" />}
 
     {showLegalLinks ? (
       <div class="display-legal-items">
         <a href="/condiciones-reserva" class="site-footer__copy">Condiciones de reserva</a>
         <a href="/politicas-privacidad" class="site-footer__copy">Políticas de privacidad</a>
         <a href="/politicas-cookies" class="site-footer__copy">Políticas de cookies</a>
-        <p class="site-footer__copy">© {new Date().getFullYear()} Meriyo Tours (Dublin)</p>
+        <p class="site-footer__copy">© {new Date().getFullYear()} Meriyo Tours Dublín</p>
       </div>
     ) : (
-      <p class="site-footer__copy">© {new Date().getFullYear()} Meriyo Tours (Dublin)</p>
+      <p class="site-footer__copy">© {new Date().getFullYear()} Meriyo Tours Dublín. Todos los derechos reservados.</p>
     )}
   </div>
 </footer>
