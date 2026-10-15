@@ -31,13 +31,70 @@ const hiddenLinks = [
       ))}
     </nav>
 
-    <a class="nav__lang" aria-label="Idioma: Español">
-      <svg class="nav__flag" viewBox="0 0 3 2" width="22" height="15" aria-hidden="true">
-        <rect width="3" height="2" fill="#AA151B"/>
-        <rect y="0.5" width="3" height="1" fill="#F1BF00"/>
-      </svg>
-      <span class="nav__lang-label">ES</span>
-    </a>
+    <!-- Nuevo Menú de Idiomas -->
+    <div class="nav__lang-wrapper">
+      <button class="nav__lang-btn" id="lang-toggle" aria-label="Cambiar idioma" aria-haspopup="true" aria-expanded="false">
+        <!-- Bandera Fusionada (UK / US / ES) -->
+        <svg class="nav__flag-fused" viewBox="0 0 30 20" width="26" height="18" aria-hidden="true">
+          <!-- Reino Unido (Cuarto Superior Izquierdo) -->
+          <rect x="0" y="0" width="15" height="10" fill="#012169"/>
+          <path d="M0,0 L15,10 M0,10 L15,0" stroke="#fff" stroke-width="1.5"/>
+          <path d="M0,0 L15,10 M0,10 L15,0" stroke="#C8102E" stroke-width="0.5"/>
+          <line x1="7.5" y1="0" x2="7.5" y2="10" stroke="#fff" stroke-width="1.5"/>
+          <line x1="0" y1="5" x2="15" y2="5" stroke="#fff" stroke-width="1.5"/>
+          <line x1="7.5" y1="0" x2="7.5" y2="10" stroke="#C8102E" stroke-width="0.5"/>
+          <line x1="0" y1="5" x2="15" y2="5" stroke="#C8102E" stroke-width="0.5"/>
+
+          <!-- Estados Unidos (Cuarto Inferior Izquierdo) -->
+          <rect x="0" y="10" width="15" height="10" fill="#fff"/>
+          <rect x="0" y="11" width="15" height="1.5" fill="#B22234"/>
+          <rect x="0" y="14" width="15" height="1.5" fill="#B22234"/>
+          <rect x="0" y="17" width="15" height="1.5" fill="#B22234"/>
+          <rect x="0" y="10" width="7" height="6" fill="#3C3B6E"/>
+
+          <!-- España (Mitad Derecha) -->
+          <rect x="15" y="0" width="15" height="20" fill="#AA151B"/>
+          <rect x="15" y="5" width="15" height="10" fill="#F1BF00"/>
+        </svg>
+      </button>
+
+      <!-- Opciones de Idioma -->
+      <ul class="nav__lang-dropdown" id="lang-dropdown">
+        <li>
+          <button class="lang-option" data-lang="es">
+            <svg class="lang-option-flag" viewBox="0 0 30 20" width="20" height="14" aria-hidden="true">
+              <rect x="0" y="0" width="30" height="20" fill="#AA151B"/>
+              <rect x="0" y="5" width="30" height="10" fill="#F1BF00"/>
+            </svg>
+            Español
+          </button>
+        </li>
+        <li>
+          <button class="lang-option" data-lang="en">
+            <!-- Bandera UK/US Fusionada -->
+            <svg class="lang-option-flag" viewBox="0 0 30 20" width="20" height="14" aria-hidden="true">
+               <!-- UK Mitad Izquierda -->
+               <rect x="0" y="0" width="15" height="20" fill="#012169"/>
+               <path d="M0,0 L15,20 M0,20 L15,0" stroke="#fff" stroke-width="2"/>
+               <path d="M0,0 L15,20 M0,20 L15,0" stroke="#C8102E" stroke-width="1"/>
+               <line x1="7.5" y1="0" x2="7.5" y2="20" stroke="#fff" stroke-width="2"/>
+               <line x1="0" y1="10" x2="15" y2="10" stroke="#fff" stroke-width="2"/>
+               <line x1="7.5" y1="0" x2="7.5" y2="20" stroke="#C8102E" stroke-width="1"/>
+               <line x1="0" y1="10" x2="15" y2="10" stroke="#C8102E" stroke-width="1"/>
+               <!-- USA Mitad Derecha -->
+               <rect x="15" y="0" width="15" height="20" fill="#fff"/>
+               <rect x="15" y="2" width="15" height="2" fill="#B22234"/>
+               <rect x="15" y="6" width="15" height="2" fill="#B22234"/>
+               <rect x="15" y="10" width="15" height="2" fill="#B22234"/>
+               <rect x="15" y="14" width="15" height="2" fill="#B22234"/>
+               <rect x="15" y="18" width="15" height="2" fill="#B22234"/>
+               <rect x="15" y="0" width="8" height="10" fill="#3C3B6E"/>
+            </svg>
+            Inglés
+          </button>
+        </li>
+      </ul>
+    </div>
 
     <a href="/reservar" class="btn nav__cta rounded-btn orange-btn">RESERVAR</a>
 
@@ -112,25 +169,83 @@ const hiddenLinks = [
   }
   .nav__links a:hover::after { transform: scaleX(1); }
 
-  .nav__lang {
+  /* -- Estilos del Selector de Idioma -- */
+  .nav__lang-wrapper {
     order: 4;
-    display: inline-flex;
+    position: relative;
+    display: flex;
     align-items: center;
-    gap: 6px;
-    color: var(--parchment-alt);
-    padding: 4px 6px;
-    cursor: default;
+  }
+  
+  .nav__lang-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    transition: background 0.2s ease;
+  }
+  .nav__lang-btn:hover, .nav__lang-btn[aria-expanded="true"] {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .nav__flag-fused {
+    display: block;
+    border-radius: 3px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .nav__lang-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--forest-deep);
+    border: 1px solid var(--line);
     border-radius: 6px;
+    list-style: none;
+    padding: 6px 0;
+    margin-bottom: 0;
+    min-width: 140px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-5px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  }
+  .nav__lang-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .lang-option {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--parchment-alt);
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     transition: background 0.2s ease, color 0.2s ease;
   }
-  .nav__flag {
+  .lang-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--cream);
+  }
+
+  .lang-option-flag {
     display: block;
     border-radius: 2px;
     flex-shrink: 0;
-  }
-  .nav__lang-label {
-    font-size: 0.85rem;
-    letter-spacing: 0.03em;
+    overflow: hidden;
   }
 
   .nav__cta { order: 5; }
@@ -190,11 +305,12 @@ const hiddenLinks = [
     .nav__cta { display: none; }
     .nav__burger { display: inline-flex; }
     .nav__logo { order: 1; }
-    .nav__lang {
+    
+    .nav__lang-wrapper {
       order: 2;
       justify-self: center;
-      margin-inline: 0;
     }
+    
     .nav__burger { order: 3; justify-self: end; }
   }
 </style>
@@ -212,6 +328,46 @@ const hiddenLinks = [
     a.addEventListener('click', () => {
       links.classList.remove('is-open');
       burger?.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  const langToggle = document.getElementById('lang-toggle');
+  const langDropdown = document.getElementById('lang-dropdown');
+  const langOptions = document.querySelectorAll('.lang-option');
+
+  const currentUrlParams = new URLSearchParams(window.location.search);
+  const langInUrl = currentUrlParams.get('lang');
+  if (langInUrl) {
+    localStorage.setItem('site_lang', langInUrl);
+  }
+
+  langToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = langDropdown?.classList.toggle('is-open');
+    langToggle.setAttribute('aria-expanded', String(Boolean(isOpen)));
+  });
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (!langToggle?.contains(target) && !langDropdown?.contains(target)) {
+      langDropdown?.classList.remove('is-open');
+      langToggle?.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  langOptions.forEach(option => {
+    option.addEventListener('click', (e) => {
+      const target = e.currentTarget as HTMLButtonElement; 
+      const lang = target.getAttribute('data-lang');
+      
+      if (lang) {
+        localStorage.setItem('site_lang', lang);
+
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('lang', lang);
+        
+        window.location.href = currentUrl.toString();
+      }
     });
   });
 </script>

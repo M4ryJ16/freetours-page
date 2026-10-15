@@ -1,0 +1,96 @@
+---
+// src/components/AutoTranslator.astro
+---
+
+<script>
+  // ==========================================
+  // FLAG DE CACHÉ: Cambia a "v2", "v3", etc. al modificar textos.
+  // ==========================================
+  const VERSION_TEXTOS: string = "v1";
+
+  async function translateAllAtOnce(): Promise<void> {
+    const lang: string = localStorage.getItem('site_lang') || 'es';
+    if (lang === 'es') return; 
+
+    // 1. Escanea la página
+    const walker: TreeWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodesToTranslate: Text[] = [];
+    const textsToTranslate: string[] = [];
+    let node: Node | null;
+
+    while ((node = walker.nextNode())) {
+      // Como usamos SHOW_TEXT, sabemos que es un nodo de texto (Text), lo casteamos.
+      const textNode = node as Text;
+      
+      // Comprobación segura contra nulos (?. devuelve undefined si es null)
+      const text: string = textNode.nodeValue?.trim() || '';
+      const parentTag: string = textNode.parentElement ? textNode.parentElement.tagName : '';
+      
+      if (text.length > 0 && parentTag !== 'SCRIPT' && parentTag !== 'STYLE' && parentTag !== 'NOSCRIPT') {
+        nodesToTranslate.push(textNode);
+        textsToTranslate.push(text);
+      }
+    }
+
+    if (textsToTranslate.length === 0) return;
+
+    // 2. Obtenemos la URL actual
+    const currentPath: string = window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_') || '_home';
+    const cacheKey: string = `traduccion_${lang}_${currentPath}_${VERSION_TEXTOS}`;
+    
+    // Auto-limpieza de caché
+    Object.keys(localStorage).forEach((key: string) => {
+      if (key.startsWith('traduccion_') && !key.endsWith(`_${VERSION_TEXTOS}`)) {
+        localStorage.removeItem(key);
+      }
+    });
+
+    let translatedFullText: string | null = localStorage.getItem(cacheKey);
+
+    // 3. Petición a la API si no hay caché
+    if (!translatedFullText) {
+      const separator: string = "\n~~\n"; 
+      const fullText: string = textsToTranslate.join(separator);
+
+      try {
+        const response: Response = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=es&tl=" + lang + "&dt=t", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "q=" + encodeURIComponent(fullText)
+        });
+
+        // Definimos 'data' como un arreglo de cualquier tipo para evitar 'implicit any'
+        const data = await response.json() as any[];
+        translatedFullText = "";
+        
+        // data[0] es el array de fragmentos devuelto por Google
+        if (Array.isArray(data[0])) {
+          data[0].forEach((chunk: any[]) => {
+            if (chunk[0]) translatedFullText += (chunk[0] as string);
+          });
+        }
+
+        // 4. Guardamos el resultado en caché
+        localStorage.setItem(cacheKey, translatedFullText);
+
+      } catch (error: unknown) {
+        console.error("Fallo al traducir la página:", error);
+        return; 
+      }
+    }
+
+    // 5. Cortamos y aplicamos la traducción
+    // Si translatedFullText sigue siendo null por algún motivo raro, lo evitamos
+    if (!translatedFullText) return;
+
+    const translatedParts: string[] = translatedFullText.split(/\s*~~\s*/);
+
+    nodesToTranslate.forEach((textNode: Text, index: number) => {
+      if (translatedParts[index] && translatedParts[index].trim() !== "") {
+        textNode.nodeValue = translatedParts[index].replace(/&amp;/g, '&').trim();
+      }
+    });
+  }
+
+  window.addEventListener('load', translateAllAtOnce);
+</script>

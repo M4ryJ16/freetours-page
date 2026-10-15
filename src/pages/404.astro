@@ -1,6 +1,7 @@
 ---
 import Nav from "@/components/Nav.astro";
 import "@/styles/global.css";
+import AutoTranslator from "@/components/AutoTranslator.astro";
 ---
 
 <!doctype html>
@@ -50,12 +51,13 @@ import "@/styles/global.css";
           <p class="site-footer__logo"><em>Meriyo</em> Tours <em>Dublín</em></p>
           <p class="site-footer__text">
             Dublín que no sale en las
-            postales. Free tours con reserva anticipada.
+            postales. Tours con reserva anticipada.
           </p>
         </div>
         <p class="site-footer__copy">© {new Date().getFullYear()} Meriyo Tours (Dublin)</p>
       </div>
     </footer>
+    <AutoTranslator />
   </body>
 </html>
 

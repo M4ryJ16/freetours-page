@@ -4,6 +4,7 @@ import ReviewCard from "@/components/ReviewCard.astro";
 import { ApiError, getTour, getAllTourReviews, getTourReviewSummary, getCurrentCustomer } from "@/lib/api.js";
 import { getSessionToken, clearSessionCookie } from "@/lib/session.js";
 import "@/styles/global.css";
+import AutoTranslator from "@/components/AutoTranslator.astro";
 
 export const prerender = false;
 
@@ -294,7 +295,7 @@ function formatDuration(hoursFloat: number | null) {
           <p class="site-footer__logo"><em>Meriyo</em> Tours <em>Dublín</em></p>
           <p class="site-footer__text">
             Dublín que no sale en las
-            postales. Free tours con reserva anticipada.
+            postales. Tours con reserva anticipada.
           </p>
         </div>
         <div class="footer__social" aria-label="Redes sociales">
@@ -334,6 +335,7 @@ function formatDuration(hoursFloat: number | null) {
         </div>
       </div>
     </footer>
+    <AutoTranslator />
   </body>
 </html>
 

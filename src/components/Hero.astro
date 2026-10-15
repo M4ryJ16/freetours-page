@@ -1,11 +1,4 @@
 ---
-const advantages = [
-  "Gratis",
-  "Experiencia única",
-  "Galería exclusiva profesional",
-  "Seguro de Responsabilidad Civil para tu tranquilidad"
-];
-
 const backgrounds = [
   '/images/background-3.jpeg',
   '/images/background-2.jpeg',
@@ -21,8 +14,8 @@ const randomBg = id && Number(id) <= backgrounds.length ? backgrounds[Number(id)
 <section class="hero" id="top" style={`--bg-image: url('${randomBg}')`}>
   <div class="wrap hero__row">
     <div class="hero__copy">
-      <p class="eyebrow">Free Walking Tours · Dublín · Gratis · Vista exterior</p>
-      <h1 class="hero__title">Freetours<br />en Dublín</h1>
+      <p class="eyebrow">Excursiones en inglés y español</p>
+      <h1 class="hero__title">Tours<br />en Dublín</h1>
       <a href="/reservar" id="reservar" class="btn btn-solid">
         RESERVAR EXCURSIONES
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -34,15 +27,8 @@ const randomBg = id && Number(id) <= backgrounds.length ? backgrounds[Number(id)
 
     <div class="hero__art">
       <ul class="hero__advantages">
-        <li class="hero__advantages-title">Ventajas</li>
-        {advantages.map((v) => (
-          <li>
-            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="4 10.5 8 14.5 16 5.5"/>
-            </svg>
-            <span class="italic-text">{v}</span>
-          </li>
-        ))}
+        <li class="hero__advantages-title">Descubre la magia de Dublín a través de tours diseñados exclusivamente a tu medida y vive una experiencia inolvidable que recordarás para siempre.</li>
+        <li class="hero__advantages-title">- Vive la experiencia de Dublín -</li>
       </ul>
     </div>
   </div>

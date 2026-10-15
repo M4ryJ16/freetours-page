@@ -6,6 +6,7 @@ import Hero from "@/components/Hero.astro";
 import Tours from "@/components/Tours.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
 import "@/styles/global.css";
+import AutoTranslator from "@/components/AutoTranslator.astro";
 ---
 
 <!doctype html>
@@ -13,11 +14,11 @@ import "@/styles/global.css";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Meriyo Tours (Dublin) — Freetours en Dublín</title>
+    <title>Meriyo Tours (Dublin) — Tours en Dublín</title>
     <link rel="icon" href="/web-icon-orange.svg">
     <meta
       name="description"
-      content="Free tours en Dublín guiados por locales. Historia, mitos y rincones escondidos, a ritmo tranquilo."
+      content="Tours en Dublín guiados por locales. Historia, mitos y rincones escondidos, a ritmo tranquilo."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -35,5 +36,6 @@ import "@/styles/global.css";
 
     <SiteFooter />
     <WhatsAppButton />
+    <AutoTranslator />
   </body>
 </html>

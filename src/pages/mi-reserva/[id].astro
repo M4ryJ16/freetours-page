@@ -13,6 +13,7 @@ import WhatsAppButton from '@/components/WhatsAppButton.astro';
 import ConfirmDialog from "@/components/ConfirmDialog.astro";
 import { ApiError, getBooking, getTourDates, getTourSchedules } from "@/lib/api.js";
 import "@/styles/global.css";
+import AutoTranslator from "@/components/AutoTranslator.astro";
 
 // --------------- STRICT AUTH ---------------
 //import { ApiError, getBooking, getTourDates, getTourSchedules, getCurrentCustomer } from "@/lib/api.js";
@@ -261,7 +262,7 @@ const partySummary = [
           <p class="site-footer__logo"><em>Meriyo</em> Tours <em>Dublín</em></p>
           <p class="site-footer__text">
             Dublín que no sale en las
-            postales. Free tours con reserva anticipada.
+            postales. Tours con reserva anticipada.
           </p>
         </div>
         <div class="footer__social" aria-label="Redes sociales">
@@ -302,6 +303,7 @@ const partySummary = [
       </div>
     </footer>
    <WhatsAppButton /> 
+   <AutoTranslator />
   </body>
 </html>
 

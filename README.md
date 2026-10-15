@@ -72,4 +72,4 @@ src/
 
 - A tour's cover photo is rendered from its **gallery** (`gallery[0]`), not the `tours.image` column — nothing in the frontend reads `tours.image` directly.
 - Bookings always reference a concrete `tour_date_id` and `tour_schedule_id` rather than free-typed date/time values, so the UI needs to resolve those before a booking can be submitted.
-- There's no payment step anywhere in this flow by design — these are free tours.
+- There's no payment step anywhere in this flow by design — these are Tours.

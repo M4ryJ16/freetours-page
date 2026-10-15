@@ -11,6 +11,7 @@ import {
 } from "@/lib/api.js";
 import { getSessionToken, clearSessionCookie } from "@/lib/session.js";
 import "@/styles/global.css";
+import AutoTranslator from "@/components/AutoTranslator.astro";
 
 // This page reads the session cookie and hits several endpoints per
 // request (same reasoning as Booking.astro / the tour detail page), so it
@@ -360,7 +361,7 @@ const canShowForm = !!currentCustomer && tours.length > 0;
         <div>
           <p class="site-footer__logo"><em>Meriyo</em> Tours <em>Dublín</em></p>
           <p class="site-footer__text">
-            Dublín que no sale en las postales. Free tours con reserva anticipada.
+            Dublín que no sale en las postales. Tours con reserva anticipada.
           </p>
         </div>
         <div class="footer__social" aria-label="Redes sociales">
@@ -400,6 +401,7 @@ const canShowForm = !!currentCustomer && tours.length > 0;
         </div>
       </div>
     </footer>
+    <AutoTranslator />
   </body>
 </html>
 
