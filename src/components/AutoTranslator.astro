@@ -9,20 +9,31 @@
   const VERSION_TEXTOS: string = "v1";
 
   async function translateAllAtOnce(): Promise<void> {
-    const lang: string = localStorage.getItem('site_lang') || 'es';
+    // 1. Detección automática del idioma
+    let lang: string | null = localStorage.getItem('site_lang');
+    
+    // Si no hay idioma configurado, lo detectamos del navegador
+    if (!lang) {
+      const browserLang = navigator.language || (navigator.languages && navigator.languages[0]);
+      // Extraemos solo el código base (ej. 'en-US' -> 'en', 'fr-FR' -> 'fr')
+      lang = browserLang ? browserLang.split('-')[0] : 'es';
+      
+      // Guardamos la preferencia para futuras visitas
+      localStorage.setItem('site_lang', lang);
+    }
+
+    // Si el idioma final es español (idioma original), detenemos el proceso
     if (lang === 'es') return; 
 
-    // 1. Escanea la página
+    // 2. Escanea la página
     const walker: TreeWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const nodesToTranslate: Text[] = [];
     const textsToTranslate: string[] = [];
     let node: Node | null;
 
     while ((node = walker.nextNode())) {
-      // Como usamos SHOW_TEXT, sabemos que es un nodo de texto (Text), lo casteamos.
       const textNode = node as Text;
       
-      // Comprobación segura contra nulos (?. devuelve undefined si es null)
       const text: string = textNode.nodeValue?.trim() || '';
       const parentTag: string = textNode.parentElement ? textNode.parentElement.tagName : '';
       
@@ -34,11 +45,11 @@
 
     if (textsToTranslate.length === 0) return;
 
-    // 2. Obtenemos la URL actual
+    // 3. Obtenemos la URL actual y la caché
     const currentPath: string = window.location.pathname.replace(/[^a-zA-Z0-9]/g, '_') || '_home';
     const cacheKey: string = `traduccion_${lang}_${currentPath}_${VERSION_TEXTOS}`;
     
-    // Auto-limpieza de caché
+    // Auto-limpieza de caché antigua
     Object.keys(localStorage).forEach((key: string) => {
       if (key.startsWith('traduccion_') && !key.endsWith(`_${VERSION_TEXTOS}`)) {
         localStorage.removeItem(key);
@@ -47,7 +58,7 @@
 
     let translatedFullText: string | null = localStorage.getItem(cacheKey);
 
-    // 3. Petición a la API si no hay caché
+    // 4. Petición a la API de Google si no hay caché
     if (!translatedFullText) {
       const separator: string = "\n~~\n"; 
       const fullText: string = textsToTranslate.join(separator);
@@ -59,18 +70,16 @@
           body: "q=" + encodeURIComponent(fullText)
         });
 
-        // Definimos 'data' como un arreglo de cualquier tipo para evitar 'implicit any'
         const data = await response.json() as any[];
         translatedFullText = "";
         
-        // data[0] es el array de fragmentos devuelto por Google
         if (Array.isArray(data[0])) {
           data[0].forEach((chunk: any[]) => {
             if (chunk[0]) translatedFullText += (chunk[0] as string);
           });
         }
 
-        // 4. Guardamos el resultado en caché
+        // Guardamos el resultado en caché
         localStorage.setItem(cacheKey, translatedFullText);
 
       } catch (error: unknown) {
@@ -79,8 +88,7 @@
       }
     }
 
-    // 5. Cortamos y aplicamos la traducción
-    // Si translatedFullText sigue siendo null por algún motivo raro, lo evitamos
+    // 5. Cortamos y aplicamos la traducción al DOM
     if (!translatedFullText) return;
 
     const translatedParts: string[] = translatedFullText.split(/\s*~~\s*/);
