@@ -977,6 +977,7 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
 </style>
 
 <script>
+  import { getSiteLang } from "@/lib/siteLang.js";
   const form = document.getElementById('booking-form') as HTMLFormElement | null;
 
   if (form) {
@@ -1543,7 +1544,7 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
 
     async function submitBooking(payload: Record<string, unknown>) {
       try {
-        const res = await fetch('/api/bookings', {
+        const res = await fetch(`/api/bookings?lang=${encodeURIComponent(getSiteLang())}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)

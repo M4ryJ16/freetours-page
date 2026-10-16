@@ -156,8 +156,13 @@ export function createCustomer(data) {
 // Tours are free — a booking is created directly and confirmed by email
 // (see the backend's mailer plugin). There is no checkout/payment step.
 
-export function createBooking(data) {
-  return apiFetch('/bookings', {
+const LANG_RE = /^[A-Za-z]{2,3}([-_][A-Za-z0-9]{2,8})?$/;
+// Un lang inválido haría que el backend respondiera 400 y fallara la reserva.
+const langParam = (lang) =>
+  `lang=${encodeURIComponent(LANG_RE.test(lang ?? '') ? lang : 'es')}`;
+
+export function createBooking(data, lang) {
+  return apiFetch(`/bookings?${langParam(lang)}`, {
     method: 'POST',
     body: JSON.stringify(data)
   });
@@ -207,8 +212,12 @@ export function getCurrentCustomer(token) {
 //   { tourDateId, tourScheduleId, quantity, numberOfChildren, numberOfBabies }
 // ============================================================================
 
-export function updateBooking(id, data, token) {
-  return apiFetch(`/bookings/${id}`, {
+export function getTicketStrings(lang = 'es') {
+  return apiFetch(`/i18n/ticket-strings?lang=${encodeURIComponent(lang)}`);
+}
+
+export function updateBooking(id, data, token, lang) {
+  return apiFetch(`/bookings/${id}?${langParam(lang)}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
     headers: { Authorization: `Bearer ${token}` }
@@ -217,8 +226,8 @@ export function updateBooking(id, data, token) {
 
 // Soft-cancel (DELETE /bookings/:id — the backend flips status to
 // "cancelled" rather than removing the row).
-export function cancelBooking(id, token) {
-  return apiFetch(`/bookings/${id}`, {
+export function cancelBooking(id, token, lang) {
+  return apiFetch(`/bookings/${id}?${langParam(lang)}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` }
   });

@@ -11,6 +11,7 @@
 // requires a Bearer token either, so this proxy doesn't need to gate on
 // a session cookie or forward one.
 import { updateBooking, cancelBooking, ApiError } from "@/lib/api.js";
+const getLang = (request) => new URL(request.url).searchParams.get("lang") ?? undefined
 
 export const prerender = false;
 
@@ -32,7 +33,7 @@ export async function PATCH({ params, request }) {
   }
 
   try {
-    const updated = await updateBooking(params.id, data);
+    const updated = await updateBooking(params.id, data, getLang(request));
     return new Response(JSON.stringify(updated), {
       status: 200,
       headers: { "Content-Type": "application/json" }
@@ -44,7 +45,7 @@ export async function PATCH({ params, request }) {
 
 export async function DELETE({ params }) {
   try {
-    const cancelled = await cancelBooking(params.id);
+    const cancelled = await cancelBooking(params.id, getLang(request));
     return new Response(JSON.stringify(cancelled), {
       status: 200,
       headers: { "Content-Type": "application/json" }

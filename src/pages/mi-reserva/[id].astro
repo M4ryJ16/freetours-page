@@ -400,6 +400,9 @@ const partySummary = [
 
 <script>
   import { initConfirmDialog, confirmDialog } from "@/lib/confirmDialog.js";
+  import { getSiteLang } from "@/lib/siteLang.js";
+
+  const lang = encodeURIComponent(getSiteLang());
 
   initConfirmDialog();
 
@@ -496,7 +499,7 @@ const partySummary = [
     };
 
     try {
-      const res = await fetch(`/api/bookings/${bookingId}`, {
+      const res = await fetch(`/api/bookings/${bookingId}?lang=${lang}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -545,7 +548,7 @@ const partySummary = [
 
     cancelBtn?.setAttribute("disabled", "true");
     try {
-      const res = await fetch(`/api/bookings/${bookingId}`, { method: "DELETE" });
+      const res = await fetch(`/api/bookings/${bookingId}?lang=${lang}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.message || "No se ha podido cancelar la reserva.");
 

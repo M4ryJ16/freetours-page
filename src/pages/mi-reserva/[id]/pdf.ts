@@ -1,7 +1,7 @@
 // @ts-nocheck
 import type { APIRoute } from "astro";
 import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from "pdf-lib";
-import { ApiError, getBooking, getTour } from "@/lib/api.js";
+import { ApiError, getBooking, getTour, getTicketStrings } from "@/lib/api.js";
 
 export const prerender = false;
 
@@ -42,8 +42,8 @@ const COLOR = {
   faint: rgb(0.53, 0.5, 0.44), // muted, low-contrast text for the tipping note
 } as const;
 
-const formatDate = (value: string) =>
-  new Date(value).toLocaleDateString("es-ES", {
+const formatDate = (value: string, locale = "es-ES") =>
+  new Date(value).toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -185,7 +185,30 @@ export const GET: APIRoute = async ({ params, request }) => {
   }
   const hasMeetingPoint = tour?.meeting_point_lat != null && tour?.meeting_point_lng != null;
 
+  // ---- Ticket language ----
+  // `?lang=<code>` (default "es"). Text comes from the backend's ticket
+  // catalog (GET /i18n/ticket-strings), which translates it on demand and
+  // caches it, so the PDF and the ticket email always use the same wording.
+  const rawLang = new URL(request.url).searchParams.get("lang") ?? "es";
+  const requestedLang = /^[A-Za-z]{2,3}([-_][A-Za-z0-9]{2,8})?$/.test(rawLang) ? rawLang : "es";
+
+  let spanish: Record<string, string>;
+  let translated: Record<string, string>;
+  let lang = "es";
+  try {
+    const [es, other] = await Promise.all([
+      getTicketStrings("es"),
+      requestedLang.toLowerCase().startsWith("es") ? null : getTicketStrings(requestedLang),
+    ]);
+    spanish = es.strings;
+    translated = other?.strings ?? es.strings;
+    lang = other?.lang ?? "es";
+  } catch {
+    return new Response("No hemos podido preparar el idioma del ticket.", { status: 502 });
+  }
+
   const pdfDoc = await PDFDocument.create();
+  pdfDoc.catalog.set(PDFName.of("Lang"), PDFString.of(lang));
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -195,52 +218,72 @@ export const GET: APIRoute = async ({ params, request }) => {
   // @pdf-lib/fontkit instead — see note at the bottom of this file.
   const fontDisplay = await pdfDoc.embedFont(StandardFonts.HelveticaBoldOblique);
 
+  // The built-in Helvetica fonts only cover WinAnsi (Western European
+  // languages). If a translation contains a character outside that set
+  // (Cyrillic, Greek, CJK, Arabic…), pdf-lib would throw while drawing it,
+  // so that string falls back to its Spanish original instead. To support
+  // those scripts, embed a Unicode font with @pdf-lib/fontkit (see the note
+  // at the bottom of this file).
+  const supported = new Set(font.getCharacterSet());
+  const normalize = (s: string) => s.replace(/[\u2000-\u200b\u202f\u205f\u3000]/g, " ").trim();
+  const canDraw = (s: string) => Array.from(s).every((ch) => supported.has(ch.codePointAt(0)!));
+
+  /** Ticket text for `key` in the requested language (Spanish if it can't be drawn). */
+  const tr = (key: string, { upper = false } = {}): string => {
+    const fix = (s: string) => (upper ? s.toLocaleUpperCase(lang) : s);
+    const candidate = fix(normalize(translated[key] ?? spanish[key] ?? key));
+    return canDraw(candidate) ? candidate : fix(spanish[key] ?? key);
+  };
+
+  const dateLocale = lang === "es" ? "es-ES" : lang;
+  const dateText = (() => {
+    const localized = formatDate(booking.tour_date, dateLocale);
+    return canDraw(localized) ? localized : formatDate(booking.tour_date, "es-ES");
+  })();
+
   const pageWidth = 420;
   const marginX = 40;
   const contentWidth = pageWidth - marginX * 2;
 
   // ---- Precompute wrapped text blocks so we can size the page up front ----
   const rows: [string, string][] = [
-    ["Nombre", booking.customer_name],
-    ["Email", booking.customer_email],
-    ["Fecha", formatDate(booking.tour_date)],
+    [tr("pdfLabelName"), booking.customer_name],
+    [tr("pdfLabelEmail"), booking.customer_email],
+    [tr("labelDate"), dateText],
   ];
-  if (booking.departure_time) rows.push(["Hora", formatTime(booking.departure_time)]);
-  rows.push(["Adultos", String(booking.quantity)]);
-  if (booking.number_of_children > 0) rows.push(["Niños", String(booking.number_of_children)]);
-  if (booking.number_of_babies > 0) rows.push(["Bebés", String(booking.number_of_babies)]);
-  if (booking.number_of_pets > 0) rows.push(["Mascotas", String(booking.number_of_pets)]);
-  rows.push(["Total", "0.00€"]);
+  if (booking.departure_time) rows.push([tr("labelTime"), formatTime(booking.departure_time)]);
+  rows.push([tr("pdfLabelAdults"), String(booking.quantity)]);
+  if (booking.number_of_children > 0) rows.push([tr("pdfLabelChildren"), String(booking.number_of_children)]);
+  if (booking.number_of_babies > 0) rows.push([tr("pdfLabelBabies"), String(booking.number_of_babies)]);
+  if (booking.number_of_pets > 0) rows.push([tr("pdfLabelPets"), String(booking.number_of_pets)]);
+  rows.push([tr("pdfLabelTotal"), "0.00€"]);
 
   const rowHeight = 24;
   const detailsHeaderHeight = 40; // orange "Ruta" band, like .first__row
   const detailsBoxHeight = detailsHeaderHeight + rowHeight * rows.length + 14;
 
-  const warning =
-    "Esta reserva esta condicionada y puede sufrir variaciones o cancelaciones si no se cumple el minimo de 4 personas. Te lo notificaremos por WhatsApp o email. El guía se reserva el derecho de admisión.";
+  const warning = tr("noticeConditional");
   const warningLines = wrapText(warning, font, 9, contentWidth - 32);
   const warningHeight = warningLines.length * 12 + 24;
 
   // A second, separate notice about insurance coverage — kept distinct from
   // the quorum/cancellation warning above so each box stays scannable on
   // its own rather than merging two unrelated caveats into one wall of text.
-  const insuranceNote =
-    "El seguro del tour solo cubre incidentes ocurridos directamente durante el trayecto. No cubre malestares gástricos por alimentos/bebidas (ya que no los proporcionamos) ni incidentes por descuido personal. Las mascotas son bienvenidas reservando su lugar, pero no tienen cobertura de seguro y cualquier gasto o imprevisto corre totalmente por cuenta de sus dueños.";
+  const insuranceNote = tr("noticeHealthInsurance");
   const insuranceLines = wrapText(insuranceNote, font, 9, contentWidth - 32);
   const insuranceHeight = insuranceLines.length * 12 + 24;
 
   // A third box, placed at the very bottom of the ticket content (just
   // above the footer band), covering guide liability insurance and each
   // participant's own responsibility for fitness/health/belongings.
-  const safetyTitle = "Seguridad y responsabilidad en el tour";
-  const safetyBody =
-    "Guío los paseos con total tranquilidad porque cuento con un seguro de responsabilidad civil profesional. No obstante, ten en cuenta que cada participante se une a la caminata bajo su propia responsabilidad en lo referente a su estado físico, salud y pertenencias personales. Te recomiendo venir con calzado cómodo apto para los adoquines de Dublín y avisarme si tienes alguna molestia antes de empezar. El seguro cubre la actividad profesional del guía, pero no lesiones previas, dolencias de casa ni despistes con tus objetos personales. ¡Prevenir es curar!";
+  const safetyTitle = tr("pdfSafetyTitle");
+  const safetyBody = tr("pdfSafetyBody");
   const safetyLines = wrapText(safetyBody, font, 9, contentWidth - 32);
   const safetyTitleHeight = 18; // space reserved for the bold title line
   const safetyHeight = safetyTitleHeight + safetyLines.length * 12 + 24;
 
   const meetingAddressLines = hasMeetingPoint
-    ? wrapText(tour.meeting_point || "Punto de encuentro disponible en el mapa.", font, 10, contentWidth - 32)
+    ? wrapText(tour.meeting_point || tr("pdfMeetingFallback"), font, 10, contentWidth - 32)
     : [];
   const meetingSectionHeight = hasMeetingPoint
     ? 26 /* eyebrow + title */ + meetingAddressLines.length * 13 + 16 /* spacing */ + 34 /* map button */ + 24
@@ -250,8 +293,7 @@ export const GET: APIRoute = async ({ params, request }) => {
   // be given. Deliberately small, low-contrast, and unembellished so it
   // reads as a footnote rather than a call to action — present for anyone
   // who actually reads the page, invisible to anyone skimming it.
-  const freeTourNote =
-    "Un free tour es una visita guiada sin precio fijo: al finalizar, cada persona aporta la propina que considere justa según lo que le haya aportado la experiencia. Si quieres dejar propina, puedes hacerlo en efectivo o mediante tarjeta, Revolut o Bizum.";
+  const freeTourNote = tr("freeTourNote");
   const freeTourNoteLines = wrapText(freeTourNote, fontItalic, 7.5, contentWidth);
   const freeTourNoteHeight = freeTourNoteLines.length * 10.5 + 4;
 
@@ -301,14 +343,14 @@ export const GET: APIRoute = async ({ params, request }) => {
     font: fontBold,
     color: COLOR.gold,
   });
-  page.drawText("EXCURSIÓN GRATUITA", {
+  page.drawText(tr("freeTourBadge", { upper: true }), {
     x: marginX,
     y: pageHeight - 44,
     size: 7.5,
     font,
     color: COLOR.goldSoft,
   });
-  page.drawText("Reserva confirmada", {
+  page.drawText(tr("headerConfirmed"), {
     x: marginX,
     y: pageHeight - 76,
     size: 21,
@@ -338,7 +380,7 @@ export const GET: APIRoute = async ({ params, request }) => {
     height: detailsHeaderHeight,
     color: COLOR.orange,
   });
-  page.drawText("RUTA", {
+  page.drawText(tr("routeLabel", { upper: true }), {
     x: marginX + 10,
     y: boxTop - detailsHeaderHeight / 2 - 3,
     size: 10,
@@ -374,7 +416,7 @@ export const GET: APIRoute = async ({ params, request }) => {
 
   // ---- Meeting point ("Punto de encuentro"), mirrors tour-detail.astro ----
   if (hasMeetingPoint) {
-    page.drawText("PUNTO DE ENCUENTRO", {
+    page.drawText(tr("meetingPoint", { upper: true }), {
       x: marginX,
       y: cursorY,
       size: 8,
@@ -395,7 +437,7 @@ export const GET: APIRoute = async ({ params, request }) => {
       y: cursorY - 34,
       width: contentWidth,
       height: 34,
-      label: "Ver ubicación en el mapa",
+      label: tr("pdfButtonViewMap"),
       url: mapsUrl,
       fill: COLOR.russet,
       textColor: COLOR.cream,
@@ -450,7 +492,7 @@ export const GET: APIRoute = async ({ params, request }) => {
     y: cursorY - 34,
     width: contentWidth,
     height: 34,
-    label: "Ver / editar mi reserva online",
+    label: tr("pdfButtonManage"),
     url: bookingUrl,
     fill: COLOR.orange,
     textColor: COLOR.cream,
@@ -461,7 +503,7 @@ export const GET: APIRoute = async ({ params, request }) => {
     y: cursorY - 78,
     width: contentWidth,
     height: 34,
-    label: "Volver al inicio",
+    label: tr("pdfButtonHome"),
     url: homeUrl,
     fill: COLOR.forestDeep,
     textColor: COLOR.cream,
@@ -543,7 +585,7 @@ export const GET: APIRoute = async ({ params, request }) => {
   // Privacy policy link, right below the copyright line. Drawn as plain
   // text plus a Link annotation over the same rect (pdf-lib has no
   // built-in "hyperlinked text" helper, same approach as drawButton above).
-  const privacyLabel = "Política de privacidad";
+  const privacyLabel = tr("footerPrivacy");
   const privacyUrl = "https://www.meriyotoursdublin.com/politicas-privacidad";
   const privacySize = 8;
   const privacyWidth = font.widthOfTextAtSize(privacyLabel, privacySize);
@@ -573,6 +615,12 @@ export const GET: APIRoute = async ({ params, request }) => {
 };
 
 /**
+ * Languages written in non-Latin scripts (Russian, Greek, Chinese, Arabic…)
+ * can't be drawn with the Helvetica stand-ins; those strings fall back to
+ * Spanish. To support them, register fontkit (below) and embed a Unicode font
+ * such as Noto Sans (Cyrillic/Greek) or Noto Sans SC (Chinese), then use it
+ * for `font`/`fontBold` when `lang` needs it.
+ *
  * To get an exact match with Fraunces/Work Sans instead of the Helvetica
  * stand-ins above:
  *   npm install @pdf-lib/fontkit
