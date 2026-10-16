@@ -22,6 +22,10 @@ function json(body: unknown, status: number) {
   });
 }
 
+// Ticket-email language, sent by the client as ?lang=<code>. api.js falls
+// back to "es" when it's missing or malformed.
+const getLang = (request: Request) => new URL(request.url).searchParams.get('lang') ?? undefined;
+
 export const POST: APIRoute = async ({ request, cookies }) => {
   const token = getSessionToken(cookies);
   if (!token) {
@@ -53,16 +57,19 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   }
 
   try {
-    const booking = await createBooking({
-      customerId: customer.id,
-      tourId,
-      tourDateId,
-      tourScheduleId,
-      quantity: guests,
-      numberOfChildren: numberOfChildren ?? 0,
-      numberOfBabies: numberOfBabies ?? 0,
-      numberOfPets: numberOfPets ?? 0   // add this
-    });
+    const booking = await createBooking(
+      {
+        customerId: customer.id,
+        tourId,
+        tourDateId,
+        tourScheduleId,
+        quantity: guests,
+        numberOfChildren: numberOfChildren ?? 0,
+        numberOfBabies: numberOfBabies ?? 0,
+        numberOfPets: numberOfPets ?? 0   // add this
+      },
+      getLang(request)
+    );
     return json(booking, 201);
   } catch (err) {
     if (err instanceof ApiError) {
@@ -93,4 +100,3 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     );
   }
 };
-

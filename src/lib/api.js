@@ -199,36 +199,28 @@ export function getCurrentCustomer(token) {
   });
 }
 
-// ============================================================================
-// Add these to the "--- Bookings ---" section of src/lib/api.js, right after
-// getBooking(id).
+// --- Booking edit / cancel ---
+// No session token needed: the backend's PATCH/DELETE /bookings/:id are
+// open to anyone with the booking id (see routes/bookings.js). `lang` is
+// the ticket-email language ("es" by default).
 //
-// Both require the customer's own session token (Bearer auth) — the backend
-// verifies request.user.sub === booking.customer_id itself (see
-// src/routes/bookings.js), so these just need to forward the token.
-//
-// updateBooking's `data` should use the backend's exact (camelCase) field
-// names — any subset of:
-//   { tourDateId, tourScheduleId, quantity, numberOfChildren, numberOfBabies }
-// ============================================================================
+// updateBooking's `data` uses the backend's camelCase field names — any
+// subset of:
+//   { tourDateId, tourScheduleId, quantity, numberOfChildren, numberOfBabies, numberOfPets }
 
 export function getTicketStrings(lang = 'es') {
   return apiFetch(`/i18n/ticket-strings?lang=${encodeURIComponent(lang)}`);
 }
 
-export function updateBooking(id, data, token, lang) {
+export function updateBooking(id, data, lang) {
   return apiFetch(`/bookings/${id}?${langParam(lang)}`, {
     method: 'PATCH',
-    body: JSON.stringify(data),
-    headers: { Authorization: `Bearer ${token}` }
+    body: JSON.stringify(data)
   });
 }
 
 // Soft-cancel (DELETE /bookings/:id — the backend flips status to
 // "cancelled" rather than removing the row).
-export function cancelBooking(id, token, lang) {
-  return apiFetch(`/bookings/${id}?${langParam(lang)}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` }
-  });
+export function cancelBooking(id, lang) {
+  return apiFetch(`/bookings/${id}?${langParam(lang)}`, { method: 'DELETE' });
 }

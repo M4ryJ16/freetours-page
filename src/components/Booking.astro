@@ -980,6 +980,8 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
   import { getSiteLang } from "@/lib/siteLang.js";
   const form = document.getElementById('booking-form') as HTMLFormElement | null;
 
+  console.log(getSiteLang());
+
   if (form) {
     const isAuthenticated = form.dataset.authenticated === 'true';
 

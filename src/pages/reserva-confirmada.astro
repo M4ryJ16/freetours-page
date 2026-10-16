@@ -144,7 +144,7 @@ const formatTime = (value: string) => value?.slice(0, 5) ?? value;
               </div>
 
               <div class="confirm__actions">
-                <a href={`/mi-reserva/${booking.id}/pdf`} class="btn nav__cta rounded-btn orange-btn" target="_blank">Descargar PDF</a>
+                <a id="pdf-link" href={`/mi-reserva/${booking.id}/pdf`} class="btn nav__cta rounded-btn orange-btn" target="_blank">Descargar PDF</a>
                 <a href={`/mi-reserva/${booking.id}`} class="btn nav__cta rounded-btn orange-btn">Editar reserva</a>
                 <a href="/" class="btn btn--secondary rounded-btn">Volver al inicio</a>
               </div>
@@ -314,3 +314,25 @@ const formatTime = (value: string) => value?.slice(0, 5) ?? value;
   }
 
 </style>
+
+<script>
+  import { getSiteLang } from "@/lib/siteLang.js";
+
+  // The PDF ticket is generated server-side, which can't read localStorage,
+  // so the visitor's current site language is appended to the link here
+  // (?lang=<code>). It's refreshed right before the link is used, in case
+  // the language was changed on this page after it loaded.
+  const pdfLink = document.getElementById("pdf-link") as HTMLAnchorElement | null;
+
+  if (pdfLink) {
+    const updatePdfLinkLang = () => {
+      const url = new URL(pdfLink.href, window.location.origin);
+      url.searchParams.set("lang", getSiteLang());
+      pdfLink.href = url.toString();
+    };
+
+    updatePdfLinkLang();
+    // click / middle-click / right-click ("copy link") all pick up the latest language.
+    ["click", "auxclick", "contextmenu"].forEach((evt) => pdfLink.addEventListener(evt, updatePdfLinkLang));
+  }
+</script>

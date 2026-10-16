@@ -10,10 +10,14 @@
 // backend (PATCH/DELETE /bookings/:id in routes/bookings.js) no longer
 // requires a Bearer token either, so this proxy doesn't need to gate on
 // a session cookie or forward one.
+//
+// The ticket-email language comes in as ?lang=<code> on the request and is
+// forwarded to the backend (defaults to "es" there).
 import { updateBooking, cancelBooking, ApiError } from "@/lib/api.js";
-const getLang = (request) => new URL(request.url).searchParams.get("lang") ?? undefined
 
 export const prerender = false;
+
+const getLang = (request) => new URL(request.url).searchParams.get("lang") ?? undefined;
 
 function fromApiError(err) {
   const status = err instanceof ApiError ? err.status : 500;
@@ -43,7 +47,7 @@ export async function PATCH({ params, request }) {
   }
 }
 
-export async function DELETE({ params }) {
+export async function DELETE({ params, request }) {
   try {
     const cancelled = await cancelBooking(params.id, getLang(request));
     return new Response(JSON.stringify(cancelled), {
