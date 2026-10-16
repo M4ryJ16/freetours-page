@@ -1,0 +1,96 @@
+---
+// components/AdminTable.astro
+//
+// Tabla del admin (contenedor con borde dorado + <table> + cabecera) que
+// estaba en tours, stops y reservations. Las filas van en el slot por
+// defecto; el pie (<tfoot>) en el slot `foot`.
+//
+//   <AdminTable id="tours-table" tbodyId="tours-tbody" columns={[…]}
+//               empty={tours.length === 0 ? "Todavía no hay…" : undefined}>
+//     <tr>…</tr>
+//   </AdminTable>
+//
+// columns: [{ label, class? }] — clases útiles: admin__col-actions,
+//          admin__col-num (números alineados a la derecha).
+// empty:   si se pasa, añade la fila "vacía" con ese mensaje.
+// dense:   variante de reservations: filas más compactas, cabeceras sin
+//          saltos de línea y scroll horizontal en pantallas pequeñas.
+
+interface Column {
+  label: string;
+  class?: string;
+}
+
+interface Props {
+  columns: Column[];
+  id?: string;
+  tbodyId?: string;
+  empty?: string;
+  dense?: boolean;
+}
+
+const { columns, id, tbodyId, empty, dense = false } = Astro.props;
+---
+
+<div class:list={["admin__table-wrap", { "admin__table-wrap--dense": dense }]}>
+  <table class="admin__table" id={id}>
+    <thead>
+      <tr>
+        {columns.map((c) => <th class={c.class}>{c.label}</th>)}
+      </tr>
+    </thead>
+    <tbody id={tbodyId}>
+      {empty && (
+        <tr class="admin__empty-row">
+          <td colspan={columns.length}>{empty}</td>
+        </tr>
+      )}
+      <slot />
+    </tbody>
+    <slot name="foot" />
+  </table>
+</div>
+
+<style is:global>
+  .admin__table-wrap {
+    background: var(--cream);
+    border: 1px solid rgba(24, 34, 25, 0.1);
+    border-top: 3px solid var(--gold);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .admin__table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .admin__table th {
+    text-align: left;
+    font-size: 0.74rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #7a7562;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(24, 34, 25, 0.1);
+  }
+  .admin__table td {
+    padding: 14px 18px;
+    border-bottom: 1px dashed rgba(24, 34, 25, 0.12);
+    color: var(--ink);
+    vertical-align: middle;
+  }
+  .admin__table tr:last-child td { border-bottom: none; }
+  .admin__empty-row td { color: #7a7562; text-align: center; padding: 30px 18px; }
+
+  .admin__table-wrap--dense { overflow-x: auto; }
+  .admin__table-wrap--dense th { white-space: nowrap; }
+  .admin__table-wrap--dense td { padding: 12px 18px; }
+
+  .admin__col-actions { white-space: nowrap; text-align: right; }
+  .admin__col-num { text-align: right; white-space: nowrap; }
+  .admin__col-strong { font-weight: 700; }
+  .admin__tour-name { font-weight: 600; }
+  .admin__table tfoot td {
+    font-weight: 700;
+    background: var(--parchment-alt);
+    border-top: 2px solid rgba(24, 34, 25, 0.15);
+    border-bottom: none;
+  }
+  .admin__table .admin__link-btn--danger { margin-left: 6px; }
+</style>

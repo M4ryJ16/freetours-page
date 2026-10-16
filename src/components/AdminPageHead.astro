@@ -1,0 +1,47 @@
+---
+// components/AdminPageHead.astro
+//
+// Bloque "eyebrow + título + (acción)" que abre cada página de admin
+// (.admin__head). La acción (p. ej. "+ Nueva excursión") va en el slot
+// `actions`.
+//
+// `tight`: margen inferior reducido (16px en vez de 30px), para cuando justo
+// debajo hay un texto de ayuda (stops.astro).
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  tight?: boolean;
+}
+
+const { eyebrow, title, tight = false } = Astro.props;
+---
+
+<div class:list={["admin__head", { "admin__head--tight": tight }]}>
+  <div>
+    <p class="eyebrow">{eyebrow}</p>
+    <h1 class="admin__title">{title}</h1>
+  </div>
+  <slot name="actions" />
+</div>
+
+<style is:global>
+  .admin__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  .admin__head--tight { margin-bottom: 16px; }
+  .admin__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    color: var(--ink);
+    margin: 8px 0 0;
+  }
+  @media (max-width: 640px) {
+    .admin__head { flex-direction: column; align-items: stretch; }
+  }
+</style>

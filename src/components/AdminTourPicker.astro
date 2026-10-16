@@ -1,0 +1,53 @@
+---
+// components/AdminTourPicker.astro
+//
+// Tarjeta "Ruta: [select]" que está al principio de horarios, fechas e
+// imágenes. Al cambiar la ruta recarga la página con ?tour=<id> (el script
+// vivía copiado en las tres páginas). Si no hay ninguna excursión muestra el
+// aviso con el enlace al panel de excursiones.
+//
+//   <AdminTourPicker tours={tours} selectedTourId={selectedTourId} />
+
+import AdminCard from "./AdminCard.astro";
+import AdminField from "./AdminField.astro";
+import AdminNotice from "./AdminNotice.astro";
+import AdminTourSelect from "./AdminTourSelect.astro";
+
+interface Tour {
+  id: string;
+  name: string;
+  is_active: boolean;
+}
+
+interface Props {
+  tours: Tour[];
+  selectedTourId?: string;
+  id?: string;
+  label?: string;
+}
+
+const { tours, selectedTourId = "", id = "tour-picker", label = "Ruta" } = Astro.props;
+---
+
+{tours.length === 0 ? (
+  <AdminNotice>
+    Todavía no hay excursiones. Crea una primero desde el
+    <a href="/admin/tours">panel de excursiones</a>.
+  </AdminNotice>
+) : (
+  <AdminCard>
+    <AdminField label={label} for={id}>
+      <AdminTourSelect tours={tours} selectedId={selectedTourId} id={id} data-admin-tour-picker />
+    </AdminField>
+  </AdminCard>
+)}
+
+<script>
+  document.querySelectorAll<HTMLSelectElement>("select[data-admin-tour-picker]").forEach((picker) => {
+    picker.addEventListener("change", () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tour", picker.value);
+      window.location.href = url.toString();
+    });
+  });
+</script>

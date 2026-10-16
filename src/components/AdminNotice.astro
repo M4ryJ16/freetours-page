@@ -1,0 +1,33 @@
+---
+// components/AdminNotice.astro
+//
+// Aviso estático dentro de una página de admin (.admin__notice).
+//   <AdminNotice error>{loadError}</AdminNotice>
+//   <AdminNotice>Todavía no hay excursiones. <a href="…">…</a></AdminNotice>
+
+interface Props {
+  error?: boolean;
+  class?: string;
+}
+
+const { error = false, class: className } = Astro.props;
+---
+
+<p class:list={["admin__notice", { "admin__notice--error": error }, className]}><slot /></p>
+
+<style is:global>
+  .admin__notice {
+    font-size: 0.92rem;
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin: 0 0 22px;
+    color: #4a5b4c;
+    background: var(--cream);
+    border: 1px solid rgba(24, 34, 25, 0.12);
+  }
+  .admin__notice--error {
+    color: #7a2e1f;
+    background: rgba(158, 73, 54, 0.1);
+    border-left: 3px solid var(--russet);
+  }
+</style>

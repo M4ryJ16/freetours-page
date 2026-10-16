@@ -1,0 +1,26 @@
+---
+// components/AdminListItem.astro
+//
+// Fila de AdminList: texto (hora o fecha) + botón "Eliminar".
+//   <AdminListItem label={formatTime(s.time)}
+//                  data-schedule-id={s.id}
+//                  deleteAttrs={{ "data-delete-schedule": s.id }} />
+// Los atributos sueltos (data-*) van al <li>; `deleteAttrs` al botón.
+
+import AdminLinkButton from "./AdminLinkButton.astro";
+
+interface Props {
+  label: string;
+  deleteAttrs?: Record<string, string>;
+  deleteLabel?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { label, deleteAttrs = {}, deleteLabel = "Eliminar", class: className, ...rest } = Astro.props;
+---
+
+<li class:list={["schedule-list__item", className]} {...rest}>
+  <span class="schedule-list__time">{label}</span>
+  <AdminLinkButton danger {...deleteAttrs}>{deleteLabel}</AdminLinkButton>
+</li>

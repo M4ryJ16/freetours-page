@@ -10,14 +10,23 @@
 // confirmación) el footer original solo mostraba el copyright, sin los
 // enlaces a condiciones/privacidad/cookies. Con esta prop controlas eso
 // sin duplicar el componente.
+//
+// Prop `showSocial`: por defecto sigue a `showLegalLinks`, pero blog.astro y
+// sobre-mi.astro mostraban los iconos de redes SIN los enlaces legales, así
+// que se puede activar por separado.
+//
+// Prop `socialSize`: tamaño (px) de los iconos. 32 en el sitio; 26 en blog y
+// sobre-mi.
 
 import SocialLinks from "./SocialLinks.astro";
 
 interface Props {
   showLegalLinks?: boolean;
+  showSocial?: boolean;
+  socialSize?: number;
 }
 
-const { showLegalLinks = true } = Astro.props;
+const { showLegalLinks = true, showSocial = showLegalLinks, socialSize = 32 } = Astro.props;
 ---
 
 <footer class="site-footer" id="sobre-mi">
@@ -29,7 +38,7 @@ const { showLegalLinks = true } = Astro.props;
       </p>
     </div>
 
-    {showLegalLinks && <SocialLinks size={32} className="footer__social" />}
+    {showSocial && <SocialLinks size={socialSize} className="footer__social" />}
 
     {showLegalLinks ? (
       <div class="display-legal-items">
@@ -83,4 +92,6 @@ const { showLegalLinks = true } = Astro.props;
     color: rgba(242, 234, 215, 0.6);
     margin: 0;
   }
+  /* más específico que el gap de SocialLinks (12px) para conservar los 20px del footer original */
+  .site-footer .footer__social.social-links { gap: 20px; }
 </style>

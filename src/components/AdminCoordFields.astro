@@ -1,0 +1,25 @@
+---
+// components/AdminCoordFields.astro
+//
+// Par de campos de solo lectura "Latitud / Longitud" que rellena el mapa
+// (AdminMapPicker). Ids distintos por página: f-meeting-lat/lng en tours,
+// f-lat/lng en stops.
+
+import AdminField from "./AdminField.astro";
+
+interface Props {
+  latId: string;
+  lngId: string;
+}
+
+const { latId, lngId } = Astro.props;
+---
+
+<div class="field-row">
+  <AdminField label="Latitud" for={latId} required>
+    <input type="text" id={latId} required readonly />
+  </AdminField>
+  <AdminField label="Longitud" for={lngId} required>
+    <input type="text" id={lngId} required readonly />
+  </AdminField>
+</div>

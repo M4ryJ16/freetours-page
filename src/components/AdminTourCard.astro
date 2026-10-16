@@ -1,0 +1,31 @@
+---
+// components/AdminTourCard.astro
+//
+// Tarjeta "<Título> de "<ruta>"" donde cada página (horarios, fechas,
+// imágenes) pone el contenido de la ruta elegida. Si hubo un error al cargar
+// los datos de la ruta, muestra el aviso en vez del contenido.
+//
+//   <AdminTourCard tour={selectedTour} cardId="schedules-card"
+//                  title="Horarios de" error={scheduleError}>
+//     ...contenido...
+//   </AdminTourCard>
+//
+// El id y data-tour-id son los que usa el JS de cada página.
+
+import AdminCard from "./AdminCard.astro";
+import AdminNotice from "./AdminNotice.astro";
+
+interface Props {
+  tour: { id: string; name: string };
+  cardId: string;
+  title: string;
+  error?: string | null;
+}
+
+const { tour, cardId, title, error = null } = Astro.props;
+---
+
+<AdminCard id={cardId} data-tour-id={tour.id} title={`${title} "${tour.name}"`}>
+  {error && <AdminNotice error>{error}</AdminNotice>}
+  {!error && <slot />}
+</AdminCard>

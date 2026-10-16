@@ -1,0 +1,29 @@
+---
+// components/AdminError.astro
+//
+// Mensaje de error de formulario, oculto por defecto (.panel__error.is-hidden).
+// El JS de la página le pone el texto y quita .is-hidden.
+//   <AdminError id="add-date-error" />
+
+interface Props {
+  id?: string;
+  class?: string;
+}
+
+const { id, class: className } = Astro.props;
+---
+
+<p class:list={["panel__error", "is-hidden", className]} id={id} role="alert"></p>
+
+<style is:global>
+  .panel__error {
+    font-size: 0.85rem;
+    color: #7a2e1f;
+    background: rgba(158, 73, 54, 0.1);
+    border-left: 3px solid var(--russet);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    margin: 16px 0 0;
+  }
+  .panel__error.is-hidden { display: none; }
+</style>

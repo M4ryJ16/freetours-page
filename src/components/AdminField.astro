@@ -1,0 +1,50 @@
+---
+// components/AdminField.astro
+//
+// Campo de formulario del panel: <label> + control (slot) + ayuda opcional.
+//   <AdminField label="Nombre" for="f-name" required>
+//     <input type="text" id="f-name" maxlength="255" required />
+//   </AdminField>
+//
+// `required` → asterisco; `optional` → "(opcional)"; `hint` → texto de ayuda
+// bajo el control; `hintId` → id del párrafo de ayuda (cuando lo rellena JS).
+// `class` → clases extra en el contenedor (p. ej. "add-schedule__field").
+//
+// También define .field-row (dos campos en una fila) para los formularios
+// que agrupan campos, como latitud/longitud.
+
+interface Props {
+  label?: string;
+  for?: string;
+  required?: boolean;
+  optional?: boolean;
+  hint?: string;
+  hintId?: string;
+  class?: string;
+}
+
+const { label, for: htmlFor, required = false, optional = false, hint, hintId, class: className } = Astro.props;
+---
+
+<div class:list={["field", className]}>
+  {label && (
+    <label for={htmlFor}>
+      {label}
+      {required && <em>*</em>}
+      {optional && " "}
+      {optional && <span class="field__optional">(opcional)</span>}
+    </label>
+  )}
+  <slot />
+  {(hint !== undefined || hintId) && <p class="field__hint" id={hintId}>{hint}</p>}
+</div>
+
+<style is:global>
+  .field { margin-bottom: 0; }
+  .field__optional { font-weight: 400; color: #8a8272; }
+  .field__hint { font-size: 0.78rem; color: #7a7562; margin: 6px 0 0; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) {
+    .field-row { grid-template-columns: 1fr; }
+  }
+</style>

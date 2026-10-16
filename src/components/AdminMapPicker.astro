@@ -1,0 +1,46 @@
+---
+// components/AdminMapPicker.astro
+//
+// Buscador de dirección (Nominatim) + mapa de Leaflet + ayuda, que estaba
+// duplicado en el modal de tours (punto de encuentro) y en el de stops
+// (ubicación del punto). El JS de cada página inicializa el mapa en `mapId`.
+// El botón de búsqueda recibe el id `${searchId}-btn`.
+//
+//   <AdminMapPicker label="Punto de encuentro (OpenStreetMap)"
+//                   searchId="f-meeting-search" mapId="f-meeting-map"
+//                   hint="Busca una dirección o haz clic en el mapa…" />
+
+import AdminField from "./AdminField.astro";
+
+interface Props {
+  label: string;
+  searchId: string;
+  mapId: string;
+  hint?: string;
+  required?: boolean;
+  placeholder?: string;
+}
+
+const { label, searchId, mapId, hint, required = true, placeholder = "Busca una dirección…" } = Astro.props;
+---
+
+<AdminField label={label} for={searchId} required={required} hint={hint}>
+  <div class="map-search-row">
+    <input type="text" id={searchId} placeholder={placeholder} />
+    <button type="button" class="btn btn-ghost black-color-05" id={`${searchId}-btn`}>Buscar</button>
+  </div>
+  <div id={mapId} class="admin-map"></div>
+</AdminField>
+
+<style is:global>
+  .map-search-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .map-search-row input { flex: 1; }
+  .admin-map {
+    width: 100%;
+    height: 260px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid rgba(24, 34, 25, 0.22);
+    margin-bottom: 6px;
+  }
+</style>

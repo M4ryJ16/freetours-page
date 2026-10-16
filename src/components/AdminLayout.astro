@@ -1,0 +1,134 @@
+---
+// components/AdminLayout.astro
+//
+// Esqueleto común de las páginas /admin/*: <html>, <head> (fuentes, noindex,
+// icono), cabecera de admin, <main class="admin"> con su .wrap y, opcionalmente,
+// el diálogo de confirmación. Sustituye al bloque que estaba copiado en
+// tours, dates, images, schedules, reservations, stops y login.
+//
+// Uso:
+//   <AdminLayout title="Fechas de excursiones" tag="Panel de fechas" tourId={id}>
+//     ...contenido (va dentro de <main class="admin"><div class="wrap">)...
+//     <AdminModal slot="after" ... />   // modales: fuera de <main>
+//   </AdminLayout>
+//
+// Props:
+//   title      → <title>: "{title} — Meriyo Tours (Dublin)"
+//   tag        → etiqueta de AdminHeader
+//   tourId / backHref / backLabel / showNav → se pasan a AdminHeader
+//   leaflet    → carga Leaflet (CSS + JS) para las páginas con mapa
+//   confirm    → incluye <ConfirmDialog /> (páginas que borran cosas)
+//   bare       → sin <main class="admin"><div class="wrap">: la página pone
+//                su propio <main> (login)
+//
+// También define los estilos base de formularios del panel (label, inputs,
+// select, textarea) que estaban repetidos en cada página.
+
+import "@/styles/global.css";
+import AdminHeader from "./AdminHeader.astro";
+import ConfirmDialog from "./ConfirmDialog.astro";
+
+interface Props {
+  title: string;
+  tag: string;
+  tourId?: string;
+  backHref?: string;
+  backLabel?: string;
+  showNav?: boolean;
+  leaflet?: boolean;
+  confirm?: boolean;
+  bare?: boolean;
+}
+
+const {
+  title,
+  tag,
+  tourId,
+  backHref,
+  backLabel,
+  showNav,
+  leaflet = false,
+  confirm = false,
+  bare = false,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} — Meriyo Tours (Dublin)</title>
+    <link rel="icon" href="/web-icon-orange.svg" />
+    <meta name="robots" content="noindex" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500;1,600&family=Work+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    {leaflet && <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />}
+    {leaflet && <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>}
+  </head>
+  <body>
+    <AdminHeader tag={tag} tourId={tourId} backHref={backHref} backLabel={backLabel} showNav={showNav} />
+
+    {bare ? (
+      <slot />
+    ) : (
+      <main class="admin">
+        <div class="wrap">
+          <slot />
+        </div>
+      </main>
+    )}
+
+    <slot name="after" />
+    {confirm && <ConfirmDialog />}
+  </body>
+</html>
+
+<style is:global>
+  .admin { background: var(--parchment); padding-block: 44px 100px; min-height: 60vh; }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #4a5b4c;
+    margin-bottom: 7px;
+  }
+  label em { font-style: normal; color: var(--russet); margin-left: 2px; }
+
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="file"],
+  textarea,
+  select {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--cream);
+    border: 1px solid rgba(24, 34, 25, 0.22);
+    border-radius: var(--radius);
+    padding: 11px 14px;
+  }
+  /* date / time quedan con ancho automático (filas en línea); el resto llena su campo */
+  input[type="text"],
+  input[type="password"],
+  input[type="number"],
+  input[type="file"],
+  textarea,
+  select { width: 100%; }
+  select { appearance: none; cursor: pointer; }
+  textarea { resize: vertical; }
+  input[readonly] { background: var(--parchment-alt); cursor: not-allowed; }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(233, 151, 10, 0.16);
+  }
+</style>

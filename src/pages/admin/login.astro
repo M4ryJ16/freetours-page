@@ -1,6 +1,8 @@
 ---
-import "@/styles/global.css";
 import { isAdminAuthenticated } from "@/lib/adminSession.js";
+import AdminLayout from "@/components/AdminLayout.astro";
+import AdminField from "@/components/AdminField.astro";
+import AdminError from "@/components/AdminError.astro";
 
 export const prerender = false;
 
@@ -12,155 +14,78 @@ if (isAdminAuthenticated(Astro.cookies)) {
 }
 ---
 
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Acceso administrador — Meriyo Tours (Dublin)</title>
-    <link rel="icon" href="/web-icon-orange.svg" />
-    <meta name="robots" content="noindex" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500;1,600&family=Work+Sans:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <header class="admin-top">
-      <div class="wrap admin-top__row">
-        <a href="/" class="admin-top__logo"><em>Meriyo</em> Tours <em>Dublín</em></a>
-        <span class="admin-top__tag">Acceso administrador</span>
-        <a href="/" class="admin-top__back">← Volver al sitio</a>
+<AdminLayout title="Acceso administrador" tag="Acceso administrador" showNav={false} bare>
+  <main class="login-page">
+    <div class="wrap login-page__wrap">
+      <div class="login-card">
+        <p class="eyebrow">Panel privado</p>
+        <h1 class="login-card__title">Iniciar sesión</h1>
+        <p class="login-card__text">Introduce las credenciales de administrador para continuar.</p>
+
+        <form id="login-form" novalidate>
+          <AdminField label="Usuario" for="username" required>
+            <input type="text" id="username" name="username" autocomplete="username" required />
+          </AdminField>
+          <AdminField label="Contraseña" for="password" required>
+            <input type="password" id="password" name="password" autocomplete="current-password" required />
+          </AdminField>
+          <AdminError id="login-error" />
+          <button type="submit" class="btn orange-btn login-card__submit" id="login-submit">Entrar</button>
+        </form>
       </div>
-    </header>
+    </div>
+  </main>
+</AdminLayout>
 
-    <main class="login-page">
-      <div class="wrap login-page__wrap">
-        <div class="login-card">
-          <p class="eyebrow">Panel privado</p>
-          <h1 class="login-card__title">Iniciar sesión</h1>
-          <p class="login-card__text">Introduce las credenciales de administrador para continuar.</p>
+<style is:global>
+  .login-page {
+    background: var(--parchment);
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    padding-block: 60px;
+  }
 
-          <form id="login-form" novalidate>
-            <div class="field">
-              <label for="username">Usuario<em>*</em></label>
-              <input type="text" id="username" name="username" autocomplete="username" required />
-            </div>
-            <div class="field">
-              <label for="password">Contraseña<em>*</em></label>
-              <input type="password" id="password" name="password" autocomplete="current-password" required />
-            </div>
-            <p class="login-error is-hidden" id="login-error" role="alert"></p>
-            <button type="submit" class="btn orange-btn login-card__submit" id="login-submit">Entrar</button>
-          </form>
-        </div>
-      </div>
-    </main>
+  .login-page__wrap { display: flex; justify-content: center; }
 
-    <style is:global>
-      .admin-top {
-        background: var(--forest-deep);
-        border-bottom: 1px solid var(--line);
-      }
-      .admin-top__row {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        padding-block: 16px;
-      }
-      .admin-top__logo {
-        font-family: var(--font-display);
-        font-style: italic;
-        font-size: 1.05rem;
-        color: var(--cream);
-      }
-      .admin-top__logo em { color: var(--gold); }
-      .admin-top__tag {
-        margin-left: auto;
-        font-size: 0.78rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: var(--gold-soft);
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 4px 12px;
-      }
-      .admin-top__back { font-size: 0.85rem; color: var(--parchment-alt); }
-      .admin-top__back:hover { color: var(--gold-soft); }
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--cream);
+    border: 1px solid rgba(24, 34, 25, 0.1);
+    border-top: 3px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 34px 32px 30px;
+  }
 
-      .login-page {
-        background: var(--parchment);
-        min-height: 70vh;
-        display: flex;
-        align-items: center;
-        padding-block: 60px;
-      }
-      .login-page__wrap { display: flex; justify-content: center; }
-      .login-card {
-        width: 100%;
-        max-width: 420px;
-        background: var(--cream);
-        border: 1px solid rgba(24, 34, 25, 0.1);
-        border-top: 3px solid var(--gold);
-        border-radius: var(--radius);
-        padding: 34px 32px 30px;
-      }
-      .login-card__title {
-        font-family: var(--font-display);
-        font-weight: 600;
-        font-size: 1.8rem;
-        color: var(--ink);
-        margin: 8px 0 10px;
-      }
-      .login-card__text {
-        font-size: 0.92rem;
-        line-height: 1.55;
-        color: #5a6b5c;
-        margin: 0 0 24px;
-      }
-      .login-card .field { margin-bottom: 18px; }
-      .login-card label {
-        display: block;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: #4a5b4c;
-        margin-bottom: 7px;
-      }
-      .login-card label em { font-style: normal; color: var(--russet); margin-left: 2px; }
-      .login-card input[type="text"],
-      .login-card input[type="password"] {
-        width: 100%;
-        font-family: var(--font-body);
-        font-size: 0.95rem;
-        color: var(--ink);
-        background: var(--cream);
-        border: 1px solid rgba(24, 34, 25, 0.22);
-        border-radius: var(--radius);
-        padding: 12px 14px;
-      }
-      .login-card input:focus {
-        outline: none;
-        border-color: var(--gold);
-        box-shadow: 0 0 0 3px rgba(233, 151, 10, 0.16);
-      }
-      .login-card__submit { width: 100%; justify-content: center; margin-top: 4px; }
-      .login-card__submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .login-card__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.8rem;
+    color: var(--ink);
+    margin: 8px 0 10px;
+  }
 
-      .login-error {
-        font-size: 0.85rem;
-        color: #7a2e1f;
-        background: rgba(158, 73, 54, 0.1);
-        border-left: 3px solid var(--russet);
-        padding: 10px 14px;
-        border-radius: var(--radius);
-        margin: 0 0 16px;
-      }
-      .login-error.is-hidden { display: none; }
-    </style>
+  .login-card__text {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: #5a6b5c;
+    margin: 0 0 24px;
+  }
 
-    <script define:vars={{ redirectTo }}>
+  .login-card .field { margin-bottom: 18px; }
+
+  .login-card input[type="text"],
+  .login-card input[type="password"] { padding: 12px 14px; }
+
+  .login-card__submit { width: 100%; justify-content: center; margin-top: 4px; }
+
+  .login-card__submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .login-card .panel__error { margin: 0 0 16px; }
+</style>
+
+<script define:vars={{ redirectTo }}>
       const form = document.getElementById("login-form");
       const usernameInput = document.getElementById("username");
       const passwordInput = document.getElementById("password");
@@ -195,5 +120,3 @@ if (isAdminAuthenticated(Astro.cookies)) {
         }
       });
     </script>
-  </body>
-</html>

@@ -1,0 +1,34 @@
+---
+// components/AdminCheckbox.astro
+//
+// Casilla con etiqueta (.checkbox-row): "Excursión activa" en el modal de
+// tours, "Incluir canceladas" en el filtro de reservations. El filtro la
+// compacta con su propio CSS (.filters .checkbox-row).
+
+interface Props {
+  label: string;
+  id?: string;
+  name?: string;
+  checked?: boolean;
+}
+
+const { label, id, name, checked = false } = Astro.props;
+---
+
+<label class="checkbox-row">
+  <input type="checkbox" id={id} name={name} checked={checked} />
+  <span>{label}</span>
+</label>
+
+<style is:global>
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.92rem;
+    color: var(--ink);
+    margin: 4px 0 18px;
+    cursor: pointer;
+  }
+  .checkbox-row input { width: auto; accent-color: var(--gold); }
+</style>

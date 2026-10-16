@@ -1,0 +1,41 @@
+---
+// components/AdminTourSelect.astro
+//
+// <select> de rutas con el sufijo " (archivada)" para las inactivas, dentro
+// de su .select-wrap. Lo usan AdminTourPicker (selector de ruta de las
+// páginas horarios/fechas/imágenes) y el filtro de reservations.astro.
+//
+// `allLabel`: si se pasa, añade una primera opción vacía ("Todas las rutas").
+// El resto de atributos (name, data-*) se pasan al <select>.
+
+interface Tour {
+  id: string;
+  name: string;
+  is_active: boolean;
+}
+
+interface Props {
+  tours: Tour[];
+  selectedId?: string;
+  id?: string;
+  allLabel?: string;
+  [key: string]: unknown;
+}
+
+const { tours, selectedId = "", id, allLabel, ...rest } = Astro.props;
+---
+
+<div class="select-wrap">
+  <select id={id} {...rest}>
+    {allLabel !== undefined && <option value="">{allLabel}</option>}
+    {tours.map((t) => (
+      <option value={t.id} selected={t.id === selectedId}>
+        {t.name}{!t.is_active ? " (archivada)" : ""}
+      </option>
+    ))}
+  </select>
+</div>
+
+<style is:global>
+  .select-wrap { position: relative; max-width: 360px; }
+</style>

@@ -1,5 +1,6 @@
 ---
 import Nav from "@/components/Nav.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
 import "@/styles/global.css";
 import AutoTranslator from "@/components/AutoTranslator.astro";
 
@@ -46,18 +47,7 @@ const { feature = "Esta función" } = Astro.props as Props;
       </section>
     </main>
 
-    <footer class="site-footer" id="sobre-mi">
-      <div class="wrap site-footer__row">
-        <div>
-          <p class="site-footer__logo"><em>Meriyo</em> Tours <em>Dublín</em></p>
-          <p class="site-footer__text">
-            Dublín que no sale en las
-            postales. Tours con reserva anticipada.
-          </p>
-        </div>
-        <p class="site-footer__copy">© {new Date().getFullYear()} Meriyo Tours (Dublin)</p>
-      </div>
-    </footer>
+    <SiteFooter showLegalLinks={false} />
     <AutoTranslator />
   </body>
 </html>
@@ -106,37 +96,4 @@ const { feature = "Esta función" } = Astro.props as Props;
     .soon__inner { padding-block: 60px; }
   }
 
-  .site-footer {
-    background: var(--forest-deep);
-    color: var(--parchment-alt);
-    padding-block: 40px;
-    border-top: 1px solid var(--line);
-  }
-  .site-footer__row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 24px;
-    flex-wrap: wrap;
-  }
-  .site-footer__logo {
-    font-family: var(--font-display);
-    font-style: italic;
-    font-size: 1.05rem;
-    color: var(--cream);
-    margin: 0 0 8px;
-  }
-  .site-footer__logo em { color: var(--gold); }
-  .site-footer__text {
-    max-width: 46ch;
-    font-size: 0.85rem;
-    line-height: 1.6;
-    color: var(--parchment-alt);
-    margin: 0;
-  }
-  .site-footer__copy {
-    font-size: 0.78rem;
-    color: rgba(242, 234, 215, 0.6);
-    margin: 0;
-  }
 </style>

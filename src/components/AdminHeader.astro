@@ -16,15 +16,28 @@
 // `tourId` es opcional: si lo pasas, los enlaces a horarios/fechas/imágenes/
 // puntos incluyen ?tour=... para que el admin no pierda el contexto de la
 // ruta que está editando.
+//
+// `showNav={false}` (login): sin barra de navegación ni "Cerrar sesión"; la
+// etiqueta (tag) se empuja a la derecha. `showLogout` permite ocultar solo
+// el botón de logout y por defecto sigue a `showNav`.
 
 interface Props {
   tag: string;
   tourId?: string;
   backHref?: string;
   backLabel?: string;
+  showNav?: boolean;
+  showLogout?: boolean;
 }
 
-const { tag, tourId, backHref = "/", backLabel = "← Volver al sitio" } = Astro.props;
+const {
+  tag,
+  tourId,
+  backHref = "/",
+  backLabel = "← Volver al sitio",
+  showNav = true,
+  showLogout = showNav,
+} = Astro.props;
 
 const currentPath = Astro.url.pathname;
 const q = tourId ? `?tour=${tourId}` : "";
@@ -42,8 +55,9 @@ const navLinks = [
 <header class="admin-top">
   <div class="wrap admin-top__row">
     <a href="/" class="admin-top__logo"><em>Meriyo</em> Tours <em>Dublín</em></a>
-    <span class="admin-top__tag">{tag}</span>
+    <span class:list={["admin-top__tag", { "admin-top__tag--end": !showNav }]}>{tag}</span>
 
+    {showNav && (
     <nav class="admin-top__nav">
       {navLinks.map((l) => (
         <a
@@ -54,10 +68,13 @@ const navLinks = [
         </a>
       ))}
     </nav>
+    )}
 
-    <button type="button" class="admin-top__back admin-top__logout" id="admin-logout-btn">
-      Cerrar sesión
-    </button>
+    {showLogout && (
+      <button type="button" class="admin-top__back admin-top__logout" id="admin-logout-btn">
+        Cerrar sesión
+      </button>
+    )}
     <a href={backHref} class="admin-top__back">{backLabel}</a>
   </div>
 </header>
@@ -90,6 +107,7 @@ const navLinks = [
     padding: 4px 12px;
     white-space: nowrap;
   }
+  .admin-top__tag--end { margin-left: auto; }
   .admin-top__nav {
     margin-left: auto;
     display: flex;

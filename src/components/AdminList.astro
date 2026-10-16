@@ -1,0 +1,48 @@
+---
+// components/AdminList.astro
+//
+// Lista con borde de horarios/fechas (.schedule-list). Con `empty` añade la
+// fila "Todavía no hay…" (con id `emptyId` para que el JS la quite al añadir).
+// Sus filas son <AdminListItem />.
+
+interface Props {
+  id?: string;
+  empty?: string;
+  emptyId?: string;
+}
+
+const { id, empty, emptyId } = Astro.props;
+---
+
+<ul class="schedule-list" id={id}>
+  {empty && <li class="schedule-list__empty" id={emptyId}>{empty}</li>}
+  <slot />
+</ul>
+
+<style is:global>
+  .schedule-list {
+    list-style: none;
+    margin: 0 0 22px;
+    padding: 0;
+    border: 1px solid rgba(24, 34, 25, 0.1);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .schedule-list__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px dashed rgba(24, 34, 25, 0.12);
+    font-size: 0.92rem;
+    color: var(--ink);
+  }
+  .schedule-list__item:last-child { border-bottom: none; }
+  .schedule-list__time { font-weight: 600; }
+  .schedule-list__empty {
+    padding: 18px 16px;
+    color: #7a7562;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+</style>

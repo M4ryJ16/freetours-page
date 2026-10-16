@@ -1,0 +1,41 @@
+---
+// components/AdminCard.astro
+//
+// Tarjeta blanca con borde dorado superior (.admin__card) y título opcional.
+//
+// `compact`: padding reducido, para tarjetas de filtros (reservations.astro).
+// Cualquier otro atributo (id, data-*) se pasa al <div>.
+
+interface Props {
+  title?: string;
+  compact?: boolean;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { title, compact = false, class: className, ...rest } = Astro.props;
+---
+
+<div class:list={["admin__card", { "admin__card--compact": compact }, className]} {...rest}>
+  {title && <h2 class="admin__card-title">{title}</h2>}
+  <slot />
+</div>
+
+<style is:global>
+  .admin__card {
+    background: var(--cream);
+    border: 1px solid rgba(24, 34, 25, 0.1);
+    border-top: 3px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 26px 28px 28px;
+    margin-bottom: 24px;
+  }
+  .admin__card--compact { padding: 22px 24px 24px; }
+  .admin__card-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--ink);
+    margin: 0 0 20px;
+  }
+</style>

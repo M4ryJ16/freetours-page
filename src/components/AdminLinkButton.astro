@@ -1,0 +1,43 @@
+---
+// components/AdminLinkButton.astro
+//
+// Botón/enlace de texto de las tablas y listas del admin (.admin__link-btn).
+// Con `href` se renderiza como <a>; sin él, como <button type="button">.
+// `danger` → color de acción destructiva. El resto de atributos (data-*,
+// disabled, …) se pasan tal cual.
+//   <AdminLinkButton data-edit-tour={t.id}>Editar</AdminLinkButton>
+//   <AdminLinkButton href={`/admin/dates?tour=${t.id}`}>Fechas</AdminLinkButton>
+//   <AdminLinkButton danger data-delete-date={d.id}>Eliminar</AdminLinkButton>
+
+interface Props {
+  href?: string;
+  danger?: boolean;
+  type?: "button" | "submit";
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { href, danger = false, type = "button", class: className, ...rest } = Astro.props;
+const Tag = href ? "a" : "button";
+---
+
+<Tag
+  class:list={["admin__link-btn", { "admin__link-btn--danger": danger }, className]}
+  href={href}
+  type={href ? undefined : type}
+  {...rest}><slot /></Tag>
+
+<style is:global>
+  .admin__link-btn {
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    color: var(--russet);
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+  .admin__link-btn:hover { text-decoration: underline; }
+  .admin__link-btn--danger { color: #7a2e1f; }
+  .admin__link-btn:disabled { opacity: 0.5; cursor: not-allowed; text-decoration: none; }
+</style>

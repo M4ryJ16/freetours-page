@@ -1,0 +1,47 @@
+---
+// components/AdminInlineForm.astro
+//
+// Formulario en línea "etiqueta + un campo + botón Añadir" con su error
+// debajo: "Añadir hora de salida" (schedules) y "Añadir fecha disponible"
+// (dates).
+//
+//   <AdminInlineForm formId="add-date-form" label="Añadir fecha disponible"
+//                    inputId="new-date" inputType="date"
+//                    buttonId="add-date-btn" errorId="add-date-error" />
+
+import AdminField from "./AdminField.astro";
+import AdminError from "./AdminError.astro";
+
+interface Props {
+  formId: string;
+  label: string;
+  inputId: string;
+  inputType: "date" | "time" | "text" | "number";
+  buttonId: string;
+  errorId: string;
+  buttonLabel?: string;
+}
+
+const { formId, label, inputId, inputType, buttonId, errorId, buttonLabel = "Añadir" } = Astro.props;
+---
+
+<form id={formId} class="add-schedule">
+  <AdminField label={label} for={inputId} class="add-schedule__field">
+    <input type={inputType} id={inputId} required />
+  </AdminField>
+  <button type="submit" class="btn orange-btn" id={buttonId}>{buttonLabel}</button>
+</form>
+<AdminError id={errorId} />
+
+<style is:global>
+  .add-schedule {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .add-schedule__field { flex: 1; min-width: 160px; }
+  @media (max-width: 640px) {
+    .add-schedule { flex-direction: column; align-items: stretch; }
+  }
+</style>

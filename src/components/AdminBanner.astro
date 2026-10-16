@@ -1,0 +1,32 @@
+---
+// components/AdminBanner.astro
+//
+// Banner oculto que el JS de cada página rellena tras guardar/borrar
+// (showBanner → quita .is-hidden, y añade .admin__banner--error si procede).
+
+interface Props {
+  id?: string;
+}
+
+const { id = "admin-banner" } = Astro.props;
+---
+
+<p class="admin__banner is-hidden" id={id} role="status"></p>
+
+<style is:global>
+  .admin__banner {
+    font-size: 0.9rem;
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    margin: 0 0 20px;
+    background: rgba(233, 151, 10, 0.12);
+    border-left: 3px solid var(--gold);
+    color: var(--ink);
+  }
+  .admin__banner.is-hidden { display: none; }
+  .admin__banner--error {
+    background: rgba(158, 73, 54, 0.1);
+    border-left-color: var(--russet);
+    color: #7a2e1f;
+  }
+</style>

@@ -1,0 +1,107 @@
+---
+// components/AdminModal.astro
+//
+// Panel modal de crear/editar (overlay + panel + cabecera + formulario +
+// error + botones) que estaba duplicado en tours.astro y stops.astro. Los
+// campos van en el slot por defecto.
+//
+//   <AdminModal overlayId="tour-overlay" formId="tour-form" idFieldId="tour-id"
+//               title="Nueva excursión" submitLabel="Guardar excursión">
+//     <AdminField …/>
+//   </AdminModal>
+//
+// Los ids internos (panel-title, panel-close, panel-error, panel-cancel,
+// panel-submit) son los que usa el JS de las páginas, así que se mantienen.
+// `idFieldId`: id del <input type="hidden"> que guarda el id en edición.
+
+import AdminError from "./AdminError.astro";
+
+interface Props {
+  overlayId: string;
+  formId: string;
+  title: string;
+  submitLabel: string;
+  idFieldId?: string;
+}
+
+const { overlayId, formId, title, submitLabel, idFieldId } = Astro.props;
+---
+
+<div class="overlay is-hidden" id={overlayId}>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title">
+    <div class="panel__head">
+      <h2 class="panel__title" id="panel-title">{title}</h2>
+      <button type="button" class="panel__close" id="panel-close" aria-label="Cerrar">✕</button>
+    </div>
+
+    <form id={formId} novalidate>
+      {idFieldId && <input type="hidden" id={idFieldId} />}
+
+      <slot />
+
+      <AdminError id="panel-error" />
+
+      <div class="panel__actions">
+        <button type="button" class="btn btn-ghost black-color-05" id="panel-cancel">Cancelar</button>
+        <button type="submit" class="btn orange-btn" id="panel-submit">{submitLabel}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style is:global>
+  .black-color-05 { color: rgba(0, 0, 0, 0.5); }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 14, 10, 0.5);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 5vh 20px;
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .overlay.is-hidden { display: none; }
+
+  .panel {
+    width: 100%;
+    max-width: 560px;
+    background: var(--cream);
+    border-radius: var(--radius);
+    border-top: 3px solid var(--gold);
+    padding: 28px 30px 32px;
+  }
+  .panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .panel__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    color: var(--ink);
+    margin: 0;
+  }
+  .panel__close {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: #7a7562;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .panel__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 6px;
+  }
+
+  /* Dentro del modal los campos van espaciados y el error no lleva margen superior */
+  .panel .field { margin-bottom: 16px; }
+  .panel .panel__error { margin: 0 0 16px; }
+</style>
