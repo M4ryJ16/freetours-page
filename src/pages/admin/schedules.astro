@@ -282,4 +282,38 @@ const formatTime = (value: string) => value?.slice(0, 5) ?? value;
           failed > 0
         );
       });
-    </script>
+    
+
+      scheduleList?.addEventListener("click", async (e) => {
+        const target = (e.target as HTMLElement).closest<HTMLElement>("[data-delete-schedule]");
+        const scheduleId = target?.getAttribute("data-delete-schedule");
+        if (!target || !scheduleId || !scheduleCard || !scheduleList) return;
+
+        const confirmed = await confirmDialog({
+          title: "Eliminar horario",
+          message: "¿Eliminar este horario? Esta acción no se puede deshacer.",
+          confirmLabel: "Eliminar"
+        });
+        if (!confirmed) return;
+
+        const tourId = scheduleCard.getAttribute("data-tour-id");
+        if (!tourId) return;
+
+        target.setAttribute("disabled", "true");
+        try {
+          const res = await fetch(`/api/admin/tours/${tourId}/schedules/${scheduleId}`, { method: "DELETE" });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data?.message || "No se ha podido eliminar el horario.");
+
+          scheduleList.querySelector(`li[data-schedule-id="${scheduleId}"]`)?.remove();
+          if (!scheduleList.querySelector(".schedule-list__item")) {
+            scheduleList.appendChild(emptyStateRow());
+          }
+          showBanner("Horario eliminado.");
+        } catch (err: any) {
+          showBanner(err?.message || "No se ha podido eliminar el horario. Puede que ya tenga reservas asociadas.", true);
+        } finally {
+          target.removeAttribute("disabled");
+        }
+      });
+</script>
