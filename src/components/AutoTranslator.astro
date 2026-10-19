@@ -21,6 +21,17 @@ const USE_CACHE: boolean = String(import.meta.env.USE_CACHE ?? "true").toLowerCa
     return translated;
   }
 
+  // Helper function to preserve leading and trailing spaces from the original text node
+  function preserveSpacing(originalNodeValue, translatedText) {
+    const leadingMatch = originalNodeValue.match(/^(\s*)/);
+    const trailingMatch = originalNodeValue.match(/(\s*)$/);
+    
+    const leadingSpaces = leadingMatch ? leadingMatch[1] : '';
+    const trailingSpaces = trailingMatch ? trailingMatch[1] : '';
+    
+    return leadingSpaces + translatedText + trailingSpaces;
+  }
+
   async function translateAllAtOnce() {
     // 1. Automatic language detection
     let lang = localStorage.getItem('site_lang');
@@ -42,12 +53,15 @@ const USE_CACHE: boolean = String(import.meta.env.USE_CACHE ?? "true").toLowerCa
 
     while ((node = walker.nextNode())) {
       const textNode = node;
-      const text = textNode.nodeValue?.trim() || '';
+      const rawValue = textNode.nodeValue || '';
+      const trimmedText = rawValue.trim();
       const parentTag = textNode.parentElement ? textNode.parentElement.tagName : '';
       
-      if (text.length > 0 && parentTag !== 'SCRIPT' && parentTag !== 'STYLE' && parentTag !== 'NOSCRIPT') {
+      // We check if it has content and is not inside forbidden tags
+      if (trimmedText.length > 0 && parentTag !== 'SCRIPT' && parentTag !== 'STYLE' && parentTag !== 'NOSCRIPT') {
         nodesToTranslate.push(textNode);
-        textsToTranslate.push(text);
+        // We push the trimmed text to Google Translate, but we keep track of the raw node value elsewhere if needed
+        textsToTranslate.push(trimmedText);
       }
     }
 
@@ -99,7 +113,7 @@ const USE_CACHE: boolean = String(import.meta.env.USE_CACHE ?? "true").toLowerCa
       }
     }
 
-    // 5. Split chunks, fix capitalization, and apply translations to the DOM
+    // 5. Split chunks, fix capitalization, restore spaces, and apply translations to the DOM
     if (!translatedFullText) return;
 
     const translatedParts = translatedFullText.split(/\s*~~\s*/);
@@ -114,7 +128,8 @@ const USE_CACHE: boolean = String(import.meta.env.USE_CACHE ?? "true").toLowerCa
         // Enforce initial capitalization preservation
         translatedText = matchCapitalization(originalText, translatedText);
         
-        textNode.nodeValue = translatedText;
+        // Restore original leading and trailing spaces
+        textNode.nodeValue = preserveSpacing(textNode.nodeValue, translatedText);
       }
     });
   }
