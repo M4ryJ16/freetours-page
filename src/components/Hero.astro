@@ -6,9 +6,10 @@ const backgrounds = [
 ];
 
 const advantages = [
-  'Encuentra la opción perfecta para viajar solo, con amigos o en familia.',
-  'Consigue siempre un plan diseñado para disfrutar al máximo de la ciudad.',
-  'Adapta tu viaje por completo a la compañía que elijas.'
+  'Familia',
+  'Solo o pareja',
+  'Amigos',
+  'Eventos específicos'
 ];
 
 const url = new URL(Astro.request.url);
@@ -33,7 +34,7 @@ const randomBg = id && Number(id) <= backgrounds.length ? backgrounds[Number(id)
 
     <div class="hero__art">
       <ul class="hero__advantages">
-        <li class="hero__advantages-title">Tours a pie gratuitos y tours adaptados a tu viaje: </li>
+        <li class="hero__advantages-title">Tours a pie gratuitos y tours adaptados a tu viaje en: </li>
         {advantages.map((v) => (
           <li>
             <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
