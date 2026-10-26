@@ -224,3 +224,7 @@ export function updateBooking(id, data, lang) {
 export function cancelBooking(id, lang) {
   return apiFetch(`/bookings/${id}?${langParam(lang)}`, { method: 'DELETE' });
 }
+
+export function getTourBookingSettings(tourId) {
+  return apiFetch(`/tours/${tourId}/booking-settings`);
+}

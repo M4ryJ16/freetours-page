@@ -20,6 +20,10 @@
 // `showNav={false}` (login): sin barra de navegación ni "Cerrar sesión"; la
 // etiqueta (tag) se empuja a la derecha. `showLogout` permite ocultar solo
 // el botón de logout y por defecto sigue a `showNav`.
+//
+// Responsive: en pantallas estrechas (<= 900px) la navegación, "Cerrar
+// sesión" y "Volver al sitio" se agrupan en un menú desplegable con botón
+// de hamburguesa. En escritorio el diseño es el mismo de siempre.
 
 interface Props {
   tag: string;
@@ -49,33 +53,52 @@ const navLinks = [
   { href: `/admin/dates${q}`, label: "Fechas" },
   { href: `/admin/images${q}`, label: "Imagenes" },
   { href: `/admin/stops${q}`, label: "Puntos" },
+  { href: `/admin/cut-off${q}`, label: "Corte" },
 ];
 ---
 
-<header class="admin-top">
+<header class:list={["admin-top", { "admin-top--no-nav": !showNav }]} id="admin-top">
   <div class="wrap admin-top__row">
     <a href="/" class="admin-top__logo"><em>Meriyo</em> Tours <em>Dublín</em></a>
     <span class:list={["admin-top__tag", { "admin-top__tag--end": !showNav }]}>{tag}</span>
 
     {showNav && (
-    <nav class="admin-top__nav">
-      {navLinks.map((l) => (
-        <a
-          href={l.href}
-          class={`admin-top__nav-link ${currentPath.startsWith(l.href.split("?")[0]) ? "admin-top__nav-link--active" : ""}`}
-        >
-          {l.label}
-        </a>
-      ))}
-    </nav>
-    )}
-
-    {showLogout && (
-      <button type="button" class="admin-top__back admin-top__logout" id="admin-logout-btn">
-        Cerrar sesión
+      <button
+        type="button"
+        class="admin-top__toggle"
+        id="admin-menu-toggle"
+        aria-expanded="false"
+        aria-controls="admin-menu"
+        aria-label="Abrir menú"
+      >
+        <span class="admin-top__toggle-bar"></span>
+        <span class="admin-top__toggle-bar"></span>
+        <span class="admin-top__toggle-bar"></span>
       </button>
     )}
-    <a href={backHref} class="admin-top__back">{backLabel}</a>
+
+    <div class="admin-top__menu" id="admin-menu">
+      {showNav && (
+        <nav class="admin-top__nav" aria-label="Navegación del panel">
+          {navLinks.map((l) => (
+            <a
+              href={l.href}
+              class={`admin-top__nav-link ${currentPath.startsWith(l.href.split("?")[0]) ? "admin-top__nav-link--active" : ""}`}
+              aria-current={currentPath.startsWith(l.href.split("?")[0]) ? "page" : undefined}
+            >
+              {l.label}
+            </a>
+          ))}
+        </nav>
+      )}
+
+      {showLogout && (
+        <button type="button" class="admin-top__back admin-top__logout" id="admin-logout-btn">
+          Cerrar sesión
+        </button>
+      )}
+      <a href={backHref} class="admin-top__back">{backLabel}</a>
+    </div>
   </div>
 </header>
 
@@ -95,6 +118,7 @@ const navLinks = [
     font-style: italic;
     font-size: 1.05rem;
     color: var(--cream);
+    white-space: nowrap;
   }
   .admin-top__logo em { color: var(--gold); }
   .admin-top__tag {
@@ -108,6 +132,13 @@ const navLinks = [
     white-space: nowrap;
   }
   .admin-top__tag--end { margin-left: auto; }
+
+  /* Escritorio: el contenedor del menú no genera caja propia, así que
+     nav / logout / volver se comportan como hijos directos de la fila. */
+  .admin-top__menu { display: contents; }
+
+  .admin-top__toggle { display: none; }
+
   .admin-top__nav {
     margin-left: auto;
     display: flex;
@@ -137,8 +168,93 @@ const navLinks = [
     padding: 0;
   }
 
+  /* ---------- Tablet / móvil: menú desplegable ---------- */
+  @media (max-width: 900px) {
+    .admin-top__row {
+      flex-wrap: wrap;
+      gap: 12px 16px;
+      padding-block: 12px;
+    }
+
+    .admin-top__toggle {
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 44px;
+      height: 44px;
+      margin-left: auto;
+      padding: 0 11px;
+      background: none;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .admin-top__toggle:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 0px;
+    }
+    .admin-top__toggle-bar {
+      display: block;
+      height: 2px;
+      width: 100%;
+      background: var(--cream);
+      border-radius: 2px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .admin-top.is-open .admin-top__toggle-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .admin-top.is-open .admin-top__toggle-bar:nth-child(2) { opacity: 0; }
+    .admin-top.is-open .admin-top__toggle-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* El menú pasa a ser un panel a todo el ancho, cerrado por defecto. */
+    .admin-top__menu {
+      display: none;
+      flex: 1 0 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      border-top: 1px solid var(--line);
+      padding-top: 6px;
+    }
+    .admin-top.is-open .admin-top__menu { display: flex; }
+
+    .admin-top__nav {
+      margin-left: 0;
+      flex-direction: column;
+      align-items: stretch;
+      flex-wrap: nowrap;
+      gap: 0;
+    }
+    .admin-top__nav-link,
+    .admin-top__back {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 4px;
+      font-size: 0.95rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .admin-top__nav-link--active { text-decoration: none; font-weight: 600; }
+    .admin-top__logout { width: 100%; }
+
+    /* Login (sin navegación): no hay hamburguesa, así que el enlace de
+       volver se queda siempre visible y no como panel desplegable. */
+    .admin-top--no-nav .admin-top__menu {
+      display: flex;
+      flex: 0 0 auto;
+      border-top: none;
+      padding-top: 0;
+    }
+    .admin-top--no-nav .admin-top__back {
+      border-bottom: none;
+      min-height: 0;
+    }
+  }
+
   @media (max-width: 640px) {
     .admin-top__tag { display: none; }
+    .admin-top--no-nav .admin-top__row { justify-content: space-between; }
   }
 </style>
 
@@ -146,5 +262,30 @@ const navLinks = [
   document.getElementById("admin-logout-btn")?.addEventListener("click", async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     window.location.href = "/admin/login";
+  });
+
+  const header = document.getElementById("admin-top");
+  const toggle = document.getElementById("admin-menu-toggle");
+
+  function setMenu(open: boolean) {
+    header?.classList.toggle("is-open", open);
+    toggle?.setAttribute("aria-expanded", String(open));
+    toggle?.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú");
+  }
+
+  toggle?.addEventListener("click", () => {
+    setMenu(!header?.classList.contains("is-open"));
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && header?.classList.contains("is-open")) {
+      setMenu(false);
+      toggle?.focus();
+    }
+  });
+
+  // Al volver a ancho de escritorio, deja el menú cerrado y sin estado raro.
+  window.matchMedia("(min-width: 901px)").addEventListener("change", (e) => {
+    if (e.matches) setMenu(false);
   });
 </script>

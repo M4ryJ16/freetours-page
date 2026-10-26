@@ -1,0 +1,181 @@
+---
+// @ts-nocheck
+import { listBookingSettings } from "@/lib/adminApi.js";
+import AdminLayout from "@/components/AdminLayout.astro";
+import AdminPageHead from "@/components/AdminPageHead.astro";
+import AdminNotice from "@/components/AdminNotice.astro";
+import AdminBanner from "@/components/AdminBanner.astro";
+import AdminTable from "@/components/AdminTable.astro";
+import AdminLinkButton from "@/components/AdminLinkButton.astro";
+
+export const prerender = false;
+
+interface TourSetting {
+  tourId: string;
+  name: string;
+  isActive: boolean;
+  cutoffEnabled: boolean;
+}
+
+let settings: TourSetting[] = [];
+let loadError: string | null = null;
+
+try {
+  settings = await listBookingSettings();
+} catch (err) {
+  console.error("No se han podido cargar los ajustes de reserva", err);
+  loadError = "No se han podido cargar los ajustes. Recarga la página.";
+}
+---
+
+<AdminLayout title="Margen de reserva" tag="Margen de reserva" confirm>
+  <AdminPageHead eyebrow="Reservas" title="Margen de reserva de última hora">
+  </AdminPageHead>
+
+  <p class="cutoff__help">
+    Con el margen <strong>activado</strong>, la web no permite reservar salidas que empiezan en menos de
+    4 horas. Con el margen <strong>desactivado</strong>, se puede reservar hasta el último segundo
+    antes de la hora de salida.
+  </p>
+
+  {loadError && <AdminNotice error>{loadError}</AdminNotice>}
+
+  <AdminBanner />
+
+  <AdminTable
+    id="cutoff-table"
+    tbodyId="cutoff-tbody"
+    columns={[
+      { label: "Excursión" },
+      { label: "Estado" },
+      { label: "Margen de 4 horas" },
+      { label: "Acciones", class: "admin__col-actions" },
+    ]}
+    empty={settings.length === 0 && !loadError ? "Todavía no hay excursiones." : undefined}
+  >
+    {settings.map((s) => (
+      <tr
+        data-tour-row={s.tourId}
+        data-toggle-cutoff={s.tourId}
+        data-enabled={String(s.cutoffEnabled)}
+        class="cutoff__row"
+      >
+        <td class="admin__cell-name"><span class="admin__tour-name">{s.name}</span></td>
+        <td>
+          <span class={`admin__status admin__status--${s.isActive ? "active" : "archived"}`}>
+            {s.isActive ? "Activa" : "Archivada"}
+          </span>
+        </td>
+        <td>
+          <span class={`cutoff__badge cutoff__badge--${s.cutoffEnabled ? "on" : "off"}`} data-cutoff-badge>
+            {s.cutoffEnabled ? "Activado" : "Desactivado"}
+          </span>
+        </td>
+        <td class="admin__col-actions">
+          <AdminLinkButton data-toggle-cutoff={s.tourId} data-enabled={String(s.cutoffEnabled)}>
+            {s.cutoffEnabled ? "Desactivar margen" : "Activar margen"}
+          </AdminLinkButton>
+        </td>
+      </tr>
+    ))}
+  </AdminTable>
+</AdminLayout>
+
+<style is:global>
+  .cutoff__help {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: #5a6b5c;
+    margin: 0 0 24px;
+    max-width: 70ch;
+  }
+  .cutoff__badge {
+    display: inline-block;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 4px 11px;
+  }
+  .cutoff__badge--on { background: rgba(72, 122, 74, 0.14); color: #2e5c30; }
+  .cutoff__badge--off { background: rgba(190, 120, 40, 0.16); color: #8a5416; }
+  .cutoff__row {
+    cursor: pointer;
+  }
+  .cutoff__row:hover {
+    background: rgba(72, 122, 74, 0.06);
+  }
+  .cutoff__row[aria-busy="true"] {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import { initConfirmDialog, confirmDialog } from "@/lib/confirmDialog.js";
+
+  initConfirmDialog();
+
+  const tbody = document.getElementById("cutoff-tbody") as HTMLTableSectionElement;
+  const banner = document.getElementById("admin-banner") as HTMLParagraphElement;
+
+  function showBanner(message: string, isError = false) {
+    banner.textContent = message;
+    banner.classList.remove("is-hidden");
+    banner.classList.toggle("admin__banner--error", isError);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  tbody?.addEventListener("click", async (e) => {
+    const target = (e.target as HTMLElement).closest("[data-toggle-cutoff]") as HTMLElement | null;
+    if (!target) return;
+
+    const tourId = target.getAttribute("data-toggle-cutoff")!;
+    const currentlyEnabled = target.getAttribute("data-enabled") === "true";
+    const next = !currentlyEnabled;
+    const row = target.closest("tr") as HTMLTableRowElement;
+    const button = row.querySelector("a[data-toggle-cutoff], button[data-toggle-cutoff]") as HTMLElement | null;
+    const name = row.querySelector(".admin__tour-name")?.textContent ?? "esta excursión";
+
+    const confirmed = await confirmDialog({
+      title: next ? "Activar margen de reserva" : "Desactivar margen de reserva",
+      message: next
+        ? `¿Activar el margen de 4 horas para "${name}"? No se podrán reservar salidas que empiecen en menos de 4 horas.`
+        : `¿Desactivar el margen para "${name}"? Se podrá reservar hasta el último segundo antes de la salida.`,
+      confirmLabel: next ? "Activar" : "Desactivar",
+      danger: !next
+    });
+    if (!confirmed) return;
+
+    row.setAttribute("aria-busy", "true");
+    button?.setAttribute("disabled", "true");
+    try {
+      const res = await fetch(`/api/admin/tours/${tourId}/booking-settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cutoffEnabled: next })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || "No se ha podido guardar.");
+
+      const enabled = data.cutoffEnabled;
+
+      row.setAttribute("data-enabled", String(enabled));
+      button?.setAttribute("data-enabled", String(enabled));
+      if (button) button.textContent = enabled ? "Desactivar margen" : "Activar margen";
+
+      const badge = row.querySelector("[data-cutoff-badge]") as HTMLElement;
+      badge.textContent = enabled ? "Activado" : "Desactivado";
+      badge.classList.toggle("cutoff__badge--on", enabled);
+      badge.classList.toggle("cutoff__badge--off", !enabled);
+
+      showBanner(enabled ? "Margen de reserva activado." : "Margen de reserva desactivado.");
+    } catch (err: any) {
+      showBanner(err?.message || "No se ha podido completar la operación.", true);
+    } finally {
+      row.removeAttribute("aria-busy");
+      button?.removeAttribute("disabled");
+    }
+  });
+</script>

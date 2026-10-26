@@ -236,3 +236,11 @@ export function updateImage(imageId, payload) {
 export function deleteImage(imageId) {
   return adminRequest(`/images/${imageId}`, { method: "DELETE", needsPublishKey: true });
 }
+
+export function listBookingSettings() {
+  return adminRequest("/booking-settings", { needsPublishKey: true });
+}
+
+export function updateTourBookingSettings(tourId, payload) {
+  return adminRequest(`/tours/${tourId}/booking-settings`, { method: "PUT", body: payload, needsPublishKey: true });
+}

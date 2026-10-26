@@ -980,8 +980,6 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
   import { getSiteLang } from "@/lib/siteLang.js";
   const form = document.getElementById('booking-form') as HTMLFormElement | null;
 
-  console.log(getSiteLang());
-
   if (form) {
     const isAuthenticated = form.dataset.authenticated === 'true';
 
@@ -1207,16 +1205,41 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
       };
     }
 
-    const BOOKING_CUTOFF_MINUTES = 25;
+    const BOOKING_CUTOFF_MINUTES = 240;
 
-    function timeToMinutes(time: string): number {
-      const [h, m] = time.split(':').map(Number);
-      return h * 60 + m;
+    // Whether the cutoff applies to the selected tour, from
+    // GET /tours/:id/booking-settings. This is NOT a cache: every call asks
+    // the API again, and the variable only holds the latest answer so the
+    // synchronous filtering code can read it. Default (also used if the
+    // request fails) is "enabled", i.e. the existing behaviour.
+    let currentCutoffEnabled = true;
+
+    async function loadCutoffEnabled(tourId: string): Promise<boolean> {
+      try {
+        const res = await fetch(`/api/tours/${tourId}/booking-settings`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed to load booking settings');
+        const data = await res.json();
+        currentCutoffEnabled = data?.cutoffEnabled !== false;
+      } catch {
+        currentCutoffEnabled = true;
+      }
+      return currentCutoffEnabled;
     }
 
-    function getDublinCutoffMinutes(): number {
-      const dublinNow = getDublinNow();
-      return timeToMinutes(dublinNow.time) + BOOKING_CUTOFF_MINUTES;
+    function isCutoffEnabled(): boolean {
+      return currentCutoffEnabled;
+    }
+
+    function timeToSeconds(time: string): number {
+      const [h, m, s] = time.split(':').map(Number);
+      return h * 3600 + m * 60 + (s || 0);
+    }
+
+    // Seconds-since-midnight (Dublin) a departure must be strictly after to
+    // still be bookable. Cutoff on: now + BOOKING_CUTOFF_MINUTES. Cutoff off: now.
+    function getDublinCutoffSeconds(): number {
+      const margin = isCutoffEnabled() ? BOOKING_CUTOFF_MINUTES * 60 : 0;
+      return timeToSeconds(getDublinNow().time) + margin;
     }
 
     function getCurrentCapacity(): number {
@@ -1305,11 +1328,11 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
       const isToday = selectedDateStr === dublinNow.date;
 
       // Para hoy, exige al menos BOOKING_CUTOFF_MINUTES de margen antes de
-      // la salida (p. ej. si son las 10:24, una salida a las 10:40 tampoco
-      // se puede reservar porque quedan menos de 25 minutos).
-      const cutoffMinutes = getDublinCutoffMinutes();
+      // la salida (p. ej. con 240 min, si son las 10:00, una salida a las 13:00 tampoco
+      // se puede reservar porque quedan menos de BOOKING_CUTOFF_MINUTES).
+      const cutoffSeconds = getDublinCutoffSeconds();
       const visibleSchedules = isToday
-        ? schedules.filter((s) => timeToMinutes(s.time) > cutoffMinutes)
+        ? schedules.filter((s) => timeToSeconds(s.time) > cutoffSeconds)
         : schedules;
 
       const previousValue = horaSelect.value;
@@ -1370,6 +1393,9 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
         }
       }
 
+      if (thisRequest !== scheduleRequestToken) return;
+
+      await loadCutoffEnabled(tourId);
       if (thisRequest !== scheduleRequestToken) return;
 
       renderHoraOptions(schedules ?? []);
@@ -1515,11 +1541,13 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
       loadSchedulesForSelectedTour();
     });
 
-    fechaSelect.addEventListener('change', () => {
+    fechaSelect.addEventListener('change', async () => {
       // La fecha elegida puede cambiar qué horarios siguen disponibles
       // (p. ej. al elegir "hoy" en Dublín, las horas ya pasadas se ocultan).
+      // Se consulta el ajuste de margen cada vez, sin caché.
       const tourId = tourSelect.value;
       const schedules = scheduleCache.get(tourId) ?? [];
+      await loadCutoffEnabled(tourId);
       renderHoraOptions(schedules);
       checkAvailability();
     });
@@ -1597,9 +1625,14 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
         const tourId = tourSelect.value;
         const schedules = scheduleCache.get(tourId) ?? [];
         const chosenSchedule = schedules.find((s) => s.id === horaSelect.value);
-        const cutoffMinutes = getDublinCutoffMinutes();
-        if (chosenSchedule && timeToMinutes(chosenSchedule.time) <= cutoffMinutes) {
-          showError('Quedan menos de 25 minutos para esa salida. Elige otra hora disponible.');
+        await loadCutoffEnabled(tourId);
+        const cutoffSeconds = getDublinCutoffSeconds();
+        if (chosenSchedule && timeToSeconds(chosenSchedule.time) <= cutoffSeconds) {
+          showError(
+            isCutoffEnabled()
+              ? `Quedan menos de ${BOOKING_CUTOFF_MINUTES} minutos para esa salida. Elige otra hora disponible.`
+              : 'Esa salida ya ha comenzado. Elige otra hora disponible.'
+          );
           renderHoraOptions(schedules);
           return;
         }
