@@ -1,6 +1,7 @@
 ---
 import { getTours, getCurrentCustomer } from "@/lib/api.js";
 import { getSessionToken, clearSessionCookie } from "@/lib/session.js";
+import CalendarPicker from "@/components/CalendarPicker.astro";
 
 interface ApiTour {
   id: string;
@@ -82,13 +83,13 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
           </div>
 
           <div class="field-row">
+            <!-- Date: calendar picker component. Its hidden native
+                 <select id="fecha"> remains the source of truth. -->
             <div class="field">
-              <label for="fecha">Fecha<em>*</em></label>
-              <div class="select-wrap">
-                <select id="fecha" name="fecha" required disabled>
-                  <option value="" selected>Elige primero una ruta</option>
-                </select>
-              </div>
+              <label for="fecha-toggle">Fecha<em>*</em></label>
+              <CalendarPicker id="fecha" name="fecha" required disabled timezone="Europe/Dublin">
+                <option value="" selected>Elige primero una ruta</option>
+              </CalendarPicker>
             </div>
             <div class="field">
               <label for="hora">Hora de inicio<em>*</em></label>
@@ -1302,7 +1303,10 @@ const preselectedTour = Astro.url.searchParams.get("tour") ?? "";
       fechaSelect.append(new Option('Elige una fecha', '', true, true));
       fechaSelect.options[0].disabled = true;
       for (const d of upcomingDates) {
-        fechaSelect.append(new Option(formatDate(d.date), d.id));
+        const opt = new Option(formatDate(d.date), d.id);
+        // CalendarPicker reads data-date to know which days are clickable.
+        opt.dataset.date = d.date.includes('T') ? d.date.split('T')[0] : d.date;
+        fechaSelect.append(opt);
       }
       updateSummary();
     }

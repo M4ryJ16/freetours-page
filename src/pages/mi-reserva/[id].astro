@@ -12,6 +12,7 @@ import Nav from "@/components/Nav.astro";
 import WhatsAppButton from '@/components/WhatsAppButton.astro';
 import ConfirmDialog from "@/components/ConfirmDialog.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
+import CalendarPicker from "@/components/CalendarPicker.astro";
 import { ApiError, getBooking, getTourDates, getTourSchedules } from "@/lib/api.js";
 import "@/styles/global.css";
 import AutoTranslator from "@/components/AutoTranslator.astro";
@@ -192,20 +193,18 @@ const partySummary = [
 
               {tourDates.length > 0 && (
                 <div class="field">
-                  <label for="edit-date">Fecha</label>
-                  <div class="select-wrap">
-                    <select id="edit-date" name="tourDateId">
-                      {tourDates.map((d: any) => (
-                        <option
-                          value={d.id}
-                          data-date={d.date.includes("T") ? d.date.split("T")[0] : d.date}
-                          selected={d.id === booking!.tour_date_id}
-                        >
-                          {formatDate(d.date)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <label for="edit-date-toggle">Fecha</label>
+                  <CalendarPicker id="edit-date" name="tourDateId">
+                    {tourDates.map((d: any) => (
+                      <option
+                        value={d.id}
+                        data-date={d.date.includes("T") ? d.date.split("T")[0] : d.date}
+                        selected={d.id === booking!.tour_date_id}
+                      >
+                        {formatDate(d.date)}
+                      </option>
+                    ))}
+                  </CalendarPicker>
                 </div>
               )}
 
@@ -374,6 +373,7 @@ const partySummary = [
     width: 100%;
   }
   .edit-reserva-form select { appearance: none; cursor: pointer; max-width: 260px; }
+  .edit-reserva-form .cal { max-width: 260px; }
   .edit-reserva-form input:focus,
   .edit-reserva-form select:focus {
     outline: none;
@@ -421,6 +421,8 @@ const partySummary = [
   const partyDisplay = document.getElementById("reserva-party-display");
   const dateDisplay = document.getElementById("reserva-date-display");
   const timeDisplay = document.getElementById("reserva-time-display");
+  // Hidden native <select> behind the CalendarPicker component — it stays
+  // the source of truth, so the rest of this script is unchanged.
   const dateSelect = document.getElementById("edit-date") as HTMLSelectElement | null;
   const scheduleSelect = document.getElementById("edit-schedule") as HTMLSelectElement | null;
   const quantityInput = document.getElementById("edit-quantity") as HTMLInputElement | null;
@@ -433,7 +435,7 @@ const partySummary = [
   // visitante), pero conserva siempre la fecha que la reserva tiene
   // actualmente asignada, aunque ya haya pasado — así no se pierde la
   // selección ni se rompe el formulario si alguien entra a editar una
-  // reserva antigua.
+  // reserva antigua. El calendario se actualiza solo al quitar opciones.
   function filterPastDates() {
     if (!dateSelect) return;
     const todayStr = new Date().toLocaleDateString("sv-SE"); // "YYYY-MM-DD" en zona horaria local del navegador

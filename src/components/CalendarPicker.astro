@@ -1,0 +1,365 @@
+---
+// Reusable calendar date picker.
+//
+// A hidden native <select> is the source of truth for the form value; the
+// calendar is only the UI on top of it. Every <option> that should be
+// clickable must carry data-date="YYYY-MM-DD" (the option value is whatever
+// your form needs, e.g. a tourDateId). Days without a matching option are
+// greyed out. The calendar re-syncs automatically when options are added or
+// removed, or when the select is enabled/disabled — pages never need to call
+// into it. Selecting a day dispatches a normal "change" event on the select.
+//
+// Usage:
+//   <label for="fecha-toggle">Fecha</label>
+//   <CalendarPicker id="fecha" name="fecha" required disabled timezone="Europe/Dublin">
+//     <option value="" selected>Elige primero una ruta</option>
+//   </CalendarPicker>
+//
+// Props:
+//   id          id of the hidden <select> (the toggle button gets `${id}-toggle`)
+//   name        form name (defaults to id)
+//   required    marks the select required
+//   disabled    initial disabled state
+//   timezone    IANA zone used to highlight "today" (defaults to the browser's)
+//   placeholder text shown on the button when nothing is selected
+interface Props {
+  id: string;
+  name?: string;
+  required?: boolean;
+  disabled?: boolean;
+  timezone?: string;
+  placeholder?: string;
+}
+
+const {
+  id,
+  name = id,
+  required = false,
+  disabled = false,
+  timezone = "",
+  placeholder = "Elige una fecha"
+} = Astro.props;
+---
+
+<div class="cal" data-calendar data-timezone={timezone} data-placeholder={placeholder}>
+  <select
+    id={id}
+    name={name}
+    required={required}
+    disabled={disabled}
+    class="cal__native"
+    aria-hidden="true"
+    tabindex="-1"
+  >
+    <slot />
+  </select>
+
+  <button
+    type="button"
+    class="cal__toggle"
+    id={`${id}-toggle`}
+    aria-haspopup="dialog"
+    aria-expanded="false"
+    disabled={disabled}
+  >
+    <span class="cal__toggle-label">{placeholder}</span>
+  </button>
+
+  <div class="cal__panel" role="dialog" aria-label="Calendario" hidden>
+    <div class="cal__head">
+      <button type="button" class="cal__nav cal__prev" aria-label="Mes anterior">‹</button>
+      <span class="cal__month" aria-live="polite"></span>
+      <button type="button" class="cal__nav cal__next" aria-label="Mes siguiente">›</button>
+    </div>
+    <div class="cal__dow">
+      <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+    </div>
+    <div class="cal__grid"></div>
+  </div>
+</div>
+
+<style is:global>
+  .cal { position: relative; }
+
+  /* Hidden native select (form value only). !important so page-level
+     select styles can't un-hide it. */
+  .cal__native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .cal__toggle {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--cream);
+    border: 1px solid rgba(24, 34, 25, 0.22);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .cal__toggle:disabled { opacity: 0.6; cursor: not-allowed; }
+  .cal__toggle::after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 1.6px solid var(--russet);
+    border-bottom: 1.6px solid var(--russet);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+  }
+  .cal__toggle:focus,
+  .cal__toggle[aria-expanded="true"] {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(233, 151, 10, 0.16);
+  }
+  .cal__toggle-label {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 18px;
+  }
+
+  .cal__panel {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 300px;
+    max-width: calc(100vw - 32px);
+    background: var(--cream);
+    border: 1px solid rgba(24, 34, 25, 0.22);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 28px rgba(24, 34, 25, 0.16);
+    padding: 14px;
+  }
+  .cal__panel[hidden] { display: none; }
+
+  .cal__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .cal__month {
+    font-weight: 600;
+    text-transform: capitalize;
+    color: var(--ink);
+  }
+  .cal__nav {
+    width: 34px;
+    height: 34px;
+    font-size: 1.1rem;
+    color: var(--ink);
+    cursor: pointer;
+    background: var(--parchment-alt);
+    border: 1px solid rgba(24, 34, 25, 0.22);
+    border-radius: var(--radius);
+  }
+  .cal__nav:hover:not(:disabled) { background: var(--gold-soft); }
+  .cal__nav:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .cal__dow,
+  .cal__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+  }
+  .cal__dow span {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #7a7562;
+    padding: 4px 0;
+  }
+
+  .cal__day {
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    font: inherit;
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+  .cal__day:disabled { color: rgba(24, 34, 25, 0.28); cursor: not-allowed; }
+  .cal__day.is-available { background: var(--gold-soft); font-weight: 600; cursor: pointer; }
+  .cal__day.is-available:hover { background: var(--gold); color: #fff; }
+  .cal__day.is-today { outline: 1px solid var(--russet); }
+  .cal__day.is-selected { background: #E8791A; color: #fff; }
+</style>
+
+<script>
+  const MONTHS = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  function initCalendar(root: HTMLElement) {
+    if (root.dataset.calReady) return;
+    root.dataset.calReady = "true";
+
+    const select = root.querySelector("select") as HTMLSelectElement;
+    const toggle = root.querySelector(".cal__toggle") as HTMLButtonElement;
+    const label = root.querySelector(".cal__toggle-label") as HTMLSpanElement;
+    const panel = root.querySelector(".cal__panel") as HTMLDivElement;
+    const grid = root.querySelector(".cal__grid") as HTMLDivElement;
+    const monthEl = root.querySelector(".cal__month") as HTMLSpanElement;
+    const prev = root.querySelector(".cal__prev") as HTMLButtonElement;
+    const next = root.querySelector(".cal__next") as HTMLButtonElement;
+
+    const timeZone = root.dataset.timezone || undefined;
+    const placeholder = root.dataset.placeholder || "Elige una fecha";
+
+    const start = new Date();
+    let viewYear = start.getFullYear();
+    let viewMonth = start.getMonth();
+
+    // "YYYY-MM-DD" for today in the configured time zone.
+    function todayStr(): string {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(new Date());
+    }
+
+    // "YYYY-MM-DD" -> option value, for every selectable option in the select.
+    function getAvailable(): Map<string, string> {
+      const map = new Map<string, string>();
+      for (const opt of Array.from(select.options)) {
+        const date = opt.dataset.date;
+        if (date && opt.value && !opt.disabled) map.set(date, opt.value);
+      }
+      return map;
+    }
+
+    function render() {
+      const avail = getAvailable();
+      const keys = Array.from(avail.keys());
+      const monthKey = `${viewYear}-${pad(viewMonth + 1)}`;
+      const today = todayStr();
+      const selectedValue = select.value;
+
+      monthEl.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+      prev.disabled = !keys.some((k) => k.slice(0, 7) < monthKey);
+      next.disabled = !keys.some((k) => k.slice(0, 7) > monthKey);
+
+      grid.innerHTML = "";
+      const offset = (new Date(viewYear, viewMonth, 1).getDay() + 6) % 7; // week starts Monday
+      for (let i = 0; i < offset; i++) grid.append(document.createElement("span"));
+
+      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const str = `${monthKey}-${pad(day)}`;
+        const value = avail.get(str);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "cal__day";
+        btn.textContent = String(day);
+        if (str === today) btn.classList.add("is-today");
+        if (value) {
+          btn.classList.add("is-available");
+          btn.dataset.value = value;
+          if (value === selectedValue) btn.classList.add("is-selected");
+        } else {
+          btn.disabled = true;
+        }
+        grid.append(btn);
+      }
+    }
+
+    function open() {
+      const avail = getAvailable();
+      const selectedDate = Array.from(avail.entries()).find(([, v]) => v === select.value)?.[0];
+      const anchor = selectedDate ?? Array.from(avail.keys()).sort()[0] ?? todayStr();
+      viewYear = Number(anchor.slice(0, 4));
+      viewMonth = Number(anchor.slice(5, 7)) - 1;
+      render();
+      panel.hidden = false;
+      toggle.setAttribute("aria-expanded", "true");
+    }
+
+    function close() {
+      panel.hidden = true;
+      toggle.setAttribute("aria-expanded", "false");
+    }
+
+    // Keeps the button label / disabled state in line with the hidden select.
+    function sync() {
+      toggle.disabled = select.disabled;
+      label.textContent = select.selectedOptions[0]?.textContent?.trim() || placeholder;
+      if (select.disabled) close();
+      else if (!panel.hidden) render();
+    }
+
+    toggle.addEventListener("click", () => {
+      if (panel.hidden) open();
+      else close();
+    });
+
+    prev.addEventListener("click", () => {
+      viewMonth--;
+      if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+      render();
+    });
+    next.addEventListener("click", () => {
+      viewMonth++;
+      if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+      render();
+    });
+
+    grid.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest(".cal__day[data-value]") as HTMLElement | null;
+      if (!btn?.dataset.value) return;
+      select.value = btn.dataset.value;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+      close();
+      toggle.focus();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!root.contains(e.target as Node)) close();
+    });
+    root.addEventListener("keydown", (e) => {
+      if ((e as KeyboardEvent).key === "Escape") {
+        close();
+        toggle.focus();
+      }
+    });
+
+    // Re-sync whenever the page changes the select (options added/removed,
+    // enabled/disabled) or a value is chosen.
+    select.addEventListener("change", sync);
+    new MutationObserver(sync).observe(select, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["disabled", "selected"]
+    });
+
+    sync();
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-calendar]").forEach(initCalendar);
+</script>
