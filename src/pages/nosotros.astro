@@ -1,0 +1,216 @@
+---
+import SiteFooter from "@/components/SiteFooter.astro";
+import AutoTranslator from "@/components/AutoTranslator.astro";
+---
+
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quiénes somos — Meriyo Tours (Dublin)</title>
+<link rel="icon" href="/web-icon-orange.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Work+Sans:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<style is:global>
+  :root{
+    --forest-deep: #16311F;
+    --forest: #234631;
+    --gold: #C7A03C;
+    --gold-soft: #E4CE8C;
+    --cream: #FBF6EA;
+    --parchment: #F1E9D4;
+    --parchment-alt: #F2EAD7;
+    --ink: #1E2A20;
+    --line: rgba(22, 49, 31, 0.16);
+    --rust: #A24A2C;
+    --font-display: "Fraunces", serif;
+    --font-body: "Work Sans", sans-serif;
+  }
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  body{
+    margin:0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.65;
+  }
+  .wrap{ max-width: 880px; margin-inline:auto; padding-inline: 24px; }
+  a{ color: inherit; }
+
+  /* ---- nav ---- */
+  .nav{
+    position: sticky; top:0; z-index: 20;
+    background: rgba(251,246,234,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav__row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-block: 14px;
+  }
+  .nav__logo{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.15rem;
+    color: var(--forest-deep);
+    text-decoration:none;
+  }
+  .nav__logo em{ color: var(--gold); font-style: italic; }
+  .nav__back{
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--forest);
+    text-decoration:none;
+    border-bottom: 1px solid var(--gold);
+    padding-bottom: 2px;
+  }
+
+  /* ---- quiénes somos y nuestro objetivo ---- */
+  .about-us{
+    padding-block: 64px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--parchment);
+  }
+  .about-us__head{
+    text-align:center;
+    max-width: 62ch;
+    margin: 0 auto 44px;
+  }
+  .about-us__kicker{
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--rust);
+    font-weight: 600;
+    margin: 0 0 12px;
+  }
+  .about-us h2{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.7rem, 3.6vw, 2.2rem);
+    color: var(--forest-deep);
+    margin: 0 0 18px;
+    line-height: 1.2;
+  }
+  .about-us h2 em{ color: var(--gold); font-style: italic; }
+  .about-us__head p{ margin: 0; font-size: 1.05rem; color: var(--forest); }
+  .about-us--alt{
+    background: var(--cream);
+    border-top: none;
+  }
+  .about-us--alt .goal{
+    background: var(--parchment);
+  }
+  .goals{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 760px){ .goals{ grid-template-columns: 1fr; } }
+  .goal{
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 28px 24px;
+  }
+  .goal__num{
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--gold);
+    margin: 0 0 12px;
+  }
+  .goal h3{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--forest-deep);
+    margin: 0 0 10px;
+    line-height: 1.25;
+  }
+  .goal p{ margin: 0; font-size: 0.95rem; color: var(--forest); }
+
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="wrap nav__row">
+      <a class="nav__logo" href="#"><em>Meriyo</em> Tours Dublín</a>
+      <a class="nav__back" href="/">← Volver al inicio</a>
+    </div>
+  </nav>
+
+  <!-- QUIÉNES SOMOS -->
+  <section class="about-us" id="quienes-somos">
+    <div class="wrap">
+
+      <div class="about-us__head" style="margin-bottom:0">
+        <p class="about-us__kicker">Meriyo Tours</p>
+        <h2>¿Quiénes <em>somos</em>?</h2>
+        <p>
+          En Meriyo Tours no nos conformamos con enseñarte un sitio:
+          queremos que lo sientas en las venas. Somos una tripulación de
+          apasionados de los viajes que nació para convertir una simple
+          escapada en una auténtica expedición. Desde travesías con
+          espíritu legendario, como nuestra mítica ruta vikinga, hasta
+          experiencias donde cada encuadre cuenta en nuestra ruta
+          fotográfica, diseñamos cada momento para que te sientas el
+          protagonista de tu propia peli.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- NUESTROS OBJETIVOS -->
+  <section class="about-us about-us--alt" id="objetivos">
+    <div class="wrap">
+      <div class="about-us__head">
+        <p class="about-us__kicker">Lo que nos mueve</p>
+        <h2>¿Cuáles son nuestros <em>objetivos</em>?</h2>
+      </div>
+
+      <div class="goals">
+        <article class="goal">
+          <h3>La máxima satisfacción del cliente</h3>
+          <p>
+            Queremos que acabes el tour con una sonrisa de oreja a oreja
+            y pensando: «¡Menudo acierto haber contado con estos
+            máquinas!». Tu felicidad y tu comodidad son nuestra brújula.
+          </p>
+        </article>
+        <article class="goal">
+          <h3>Calidad innegociable y constante</h3>
+          <p>
+            Aquí no valen las medias tintas ni las improvisaciones.
+            Cuidamos cada detalle para que nuestros servicios sean
+            siempre sobresalientes, tanto si es tu primer tour con
+            nosotros como si es el décimo.
+          </p>
+        </article>
+        <article class="goal">
+          <h3>Innovar sin perder la esencia</h3>
+          <p>
+            Seguimos diseñando vivencias inolvidables, como nuestras
+            rutas temáticas, fotográficas e históricas, manteniendo el
+            listón bien alto y sorprendiéndote siempre con algo nuevo.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <SiteFooter showLegalLinks={false} showSocial={true} socialSize={26} />
+  <AutoTranslator />
+</body>
+</html>
