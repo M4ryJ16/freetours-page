@@ -336,7 +336,7 @@ export const GET: APIRoute = async ({ params, request }) => {
     color: COLOR.forestDeep,
   });
 
-  page.drawText("Meriyo Tours (Dublin)", {
+  page.drawText("Meriyo Tours (Dublín)", {
     x: marginX,
     y: pageHeight - 30,
     size: 10,
@@ -566,14 +566,14 @@ export const GET: APIRoute = async ({ params, request }) => {
     height: footerBandHeight,
     color: COLOR.forestDeep,
   });
-  page.drawText("Meriyo Tours (Dublin)", {
+  page.drawText("Meriyo Tours (Dublín)", {
     x: marginX,
     y: footerBandHeight - 26,
     size: 11,
     font: fontDisplay,
     color: COLOR.cream,
   });
-  const copyright = `© ${new Date().getFullYear()} Meriyo Tours (Dublin)`;
+  const copyright = `© ${new Date().getFullYear()} Meriyo Tours (Dublín)`;
   page.drawText(copyright, {
     x: marginX,
     y: footerBandHeight - 44,

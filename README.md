@@ -1,4 +1,4 @@
-# Meriyo Tours (Dublin)
+# Meriyo Tours (Dublín)
 
 An [Astro](https://astro.build) frontend for a **free walking-tours** booking site — think GuruWalk/Sandemans-style "free tour" model: no prices, no checkout, no payment processing. Visitors browse a tour catalog, pick a date and departure time, and book instantly. A lightweight admin panel manages the catalog behind a real login page.
 
